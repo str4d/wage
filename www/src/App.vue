@@ -17,7 +17,7 @@
     />
     <DropZone v-if="!decrypting" v-on:files-added="handleFiles" />
     <EncryptPane id="details-pane" v-if="encrypting" />
-    <DecryptPane id="details-pane" v-if="decrypting" />
+    <DecryptPane id="details-pane" v-if="decrypting" v-bind:needPassphrase="needPassphrase" />
   </div>
 </template>
 
@@ -49,6 +49,11 @@ export default {
     // Are we in "decrypting" mode?
     decrypting() {
       return this.decryptFile !== null;
+    },
+    // Do we need a passphrase from the user?
+    needPassphrase() {
+      // TODO: Connect to rage
+      return false;
     }
   },
   methods: {
