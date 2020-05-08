@@ -1,5 +1,8 @@
 <template>
-  <div>TODO: encryption pane.</div>
+  <div>
+    <font-awesome-icon icon="file" size="10x" />
+    <p>TODO: encryption pane.</p>
+  </div>
 </template>
 
 <script>
