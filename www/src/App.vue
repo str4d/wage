@@ -37,9 +37,16 @@ export default {
   },
   data() {
     return {
+      wasm: null,
       encryptFiles: [],
       decryptFile: null
     };
+  },
+  beforeCreate() {
+    // WASM needs to be imported asynchronously.
+    import("rage-wasm").then(wasm => {
+      this.wasm = wasm;
+    });
   },
   computed: {
     // Are we in "encrypting" mode?
