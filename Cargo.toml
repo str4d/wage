@@ -11,7 +11,14 @@ crate-type = ["cdylib", "rlib"]
 default = ["console_error_panic_hook"]
 
 [dependencies]
+age = { git = "https://github.com/str4d/rage.git", branch = "decrypt-async", features = ["async"] }
+futures = "0.3"
+js-sys = "0.3"
+pin-project = "0.4"
+secrecy = "0.6"
 wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+wasm-streams = { git = "https://github.com/MattiasBuelens/wasm-streams.git" }
 
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires
@@ -26,9 +33,26 @@ console_error_panic_hook = { version = "0.1.1", optional = true }
 # Unfortunately, `wee_alloc` requires nightly Rust when targeting wasm for now.
 wee_alloc = { version = "0.4.2", optional = true }
 
+[dependencies.web-sys]
+version = "0.3"
+features = [
+    "File",
+    "ReadableStream",
+    "console",
+]
+
 [dev-dependencies]
 wasm-bindgen-test = "0.2"
 
 [profile.release]
 # Tell `rustc` to optimize for small code size.
 opt-level = "s"
+
+[patch.crates-io]
+js-sys = { git = "https://github.com/str4d/wasm-bindgen.git", branch = "blob-stream" }
+wasm-bindgen = { git = "https://github.com/str4d/wasm-bindgen.git", branch = "blob-stream" }
+wasm-bindgen-futures = { git = "https://github.com/str4d/wasm-bindgen.git", branch = "blob-stream" }
+wasm-bindgen-macro = { git = "https://github.com/str4d/wasm-bindgen.git", branch = "blob-stream" }
+wasm-bindgen-macro-support = { git = "https://github.com/str4d/wasm-bindgen.git", branch = "blob-stream" }
+wasm-bindgen-shared = { git = "https://github.com/str4d/wasm-bindgen.git", branch = "blob-stream" }
+web-sys = { git = "https://github.com/str4d/wasm-bindgen.git", branch = "blob-stream" }
