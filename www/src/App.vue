@@ -17,7 +17,12 @@
     />
     <DropZone v-if="!decrypting" v-on:files-added="handleFiles" />
     <EncryptPane id="details-pane" v-if="encrypting" />
-    <DecryptPane id="details-pane" v-if="decrypting" v-bind:needPassphrase="needPassphrase" />
+    <DecryptPane
+      id="details-pane"
+      v-if="decrypting"
+      v-bind:needPassphrase="needPassphrase"
+      v-on:decrypt-with-passphrase="decryptWithPassphrase"
+    />
   </div>
 </template>
 
@@ -39,7 +44,8 @@ export default {
     return {
       wasm: null,
       encryptFiles: [],
-      decryptFile: null
+      decryptFile: null,
+      decryptor: null
     };
   },
   beforeCreate() {
@@ -59,8 +65,10 @@ export default {
     },
     // Do we need a passphrase from the user?
     needPassphrase() {
-      // TODO: Connect to rage
-      return false;
+      return (
+        this.decryptor !== null &&
+        this.wasm.decryptor_requires_passphrase(this.decryptor)
+      );
     }
   },
   methods: {
@@ -68,6 +76,7 @@ export default {
     reset() {
       this.encryptFiles.length = 0;
       this.decryptFile = null;
+      this.decryptor = null;
     },
     // This function is called by the drop zone, so only if we are starting out,
     // or are already encrypting.
@@ -101,6 +110,22 @@ export default {
     // Decryption methods
     startDecrypt(file) {
       this.decryptFile = file;
+      this.wasm.decryptor_for_file(file).then(decryptor => {
+        this.decryptor = decryptor;
+      });
+    },
+    decryptWithPassphrase(passphrase) {
+      let decryptor = this.decryptor;
+      this.decryptor = null;
+
+      // TODO:
+      // - Handle if decryptor === null
+      // - Disable Decrypt button while decrypting, re-enable on error
+      // - Expose decryption errors in UI (e.g. wrong passphrase)
+
+      this.wasm.decrypt_with_passphrase(decryptor, passphrase).then(stream => {
+        console.log(stream);
+      });
     }
   }
 };
