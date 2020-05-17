@@ -79,10 +79,7 @@ export default {
     },
     // Do we need a passphrase from the user?
     needPassphrase() {
-      return (
-        this.decryptor !== null &&
-        this.wasm.decryptor_requires_passphrase(this.decryptor)
-      );
+      return this.decryptor !== null && this.decryptor.requires_passphrase();
     },
     // Have we successfully decrypted the file?
     fileDecrypted() {
@@ -142,7 +139,7 @@ export default {
       // - Disable Decrypt button while decrypting, re-enable on error
       // - Expose decryption errors in UI (e.g. wrong passphrase)
 
-      this.wasm.decrypt_with_passphrase(decryptor, passphrase).then(stream => {
+      decryptor.decrypt_with_passphrase(passphrase).then(stream => {
         this.decryptedStream = stream;
       });
     },

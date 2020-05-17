@@ -84,51 +84,77 @@ impl<'a> AsyncRead for StreamReader<'a> {
     }
 }
 
-struct Decryptor<'a> {
-    inner: age::Decryptor<BufReader<StreamReader<'a>>>,
-}
+/// A newtype around a pointer to an [`age::Decryptor`].
+#[wasm_bindgen]
+pub struct Decryptor(u64);
 
-impl<'a> Decryptor<'a> {
-    async fn new(reader: ReadableStreamDefaultReader<'a>) -> Result<Decryptor<'a>, JsValue> {
+impl Decryptor {
+    async fn new<'a>(reader: ReadableStreamDefaultReader<'a>) -> Result<Decryptor, JsValue> {
         let inner = age::Decryptor::new_async(StreamReader::new(reader))
             .await
             .map_err(|e| JsValue::from_str(&format!("{}", e)))?;
 
-        Ok(Decryptor { inner })
+        Ok(Decryptor(Box::into_raw(Box::new(inner)) as u64))
     }
 
-    fn is_recipients(&self) -> bool {
-        match &self.inner {
+    fn as_ref<'a>(&self) -> &age::Decryptor<BufReader<StreamReader<'a>>> {
+        unsafe { &*(self.0 as *const age::Decryptor<BufReader<StreamReader<'a>>>) }
+    }
+
+    fn into_box<'a>(self) -> Box<age::Decryptor<BufReader<StreamReader<'a>>>> {
+        unsafe { Box::from_raw(self.0 as *mut age::Decryptor<BufReader<StreamReader<'a>>>) }
+    }
+}
+
+#[wasm_bindgen]
+impl Decryptor {
+    /// Returns `true` if the file was encrypted to a list of recipients, and requires
+    /// identities for decryption.
+    pub fn requires_identities(&self) -> bool {
+        match &self.as_ref() {
             age::Decryptor::Recipients(_) => true,
             age::Decryptor::Passphrase(_) => false,
         }
     }
 
-    fn is_passphrase(&self) -> bool {
-        match &self.inner {
+    /// Returns `true` if the file was encrypted to a passphrase.
+    pub fn requires_passphrase(&self) -> bool {
+        match &self.as_ref() {
             age::Decryptor::Recipients(_) => false,
             age::Decryptor::Passphrase(_) => true,
         }
     }
 
-    async fn decrypt_with_passphrase(
+    /// Consumes the decryptor and returns the decrypted stream.
+    pub async fn decrypt_with_passphrase(
         self,
-        passphrase: &SecretString,
-    ) -> Result<age::stream::StreamReader<BufReader<StreamReader<'a>>>, JsValue> {
-        let decryptor = match self.inner {
+        passphrase: String,
+    ) -> Result<DecryptedStream, JsValue> {
+        let decryptor = match *self.into_box() {
             age::Decryptor::Recipients(_) => panic!("Shouldn't be called"),
             age::Decryptor::Passphrase(d) => d,
         };
 
         decryptor
-            .decrypt_async(passphrase, None)
+            .decrypt_async(&SecretString::new(passphrase), None)
+            .map(DecryptedStream::from)
             .map_err(|e| JsValue::from(format!("{}", e)))
+    }
+}
+
+/// A newtype around a pointer to an [`age::stream::StreamReader`].
+#[wasm_bindgen]
+pub struct DecryptedStream(u64);
+
+impl<'a> From<age::stream::StreamReader<BufReader<StreamReader<'a>>>> for DecryptedStream {
+    fn from(stream: age::stream::StreamReader<BufReader<StreamReader<'a>>>) -> Self {
+        DecryptedStream(Box::into_raw(Box::new(stream)) as u64)
     }
 }
 
 /// Attempts to parse the given file as an age-encrypted file, and returns a decryptor.
 #[wasm_bindgen]
-pub async fn decryptor_for_file(file: web_sys::File) -> Result<JsValue, JsValue> {
+pub async fn decryptor_for_file(file: web_sys::File) -> Result<Decryptor, JsValue> {
     // Convert from the opaque web_sys::ReadableStream Rust type to the fully-functional
     // wasm_streams::readable::ReadableStream.
     let mut stream = ReadableStream::from_raw(
@@ -136,37 +162,7 @@ pub async fn decryptor_for_file(file: web_sys::File) -> Result<JsValue, JsValue>
             .unchecked_into::<wasm_streams::readable::sys::ReadableStream>(),
     );
 
-    let decryptor = Box::new(Decryptor::new(stream.get_reader()?).await?);
+    let decryptor = Decryptor::new(stream.get_reader()?).await?;
 
-    // This is fiiiiine, we aren't allocating **that** much WASM memory...
-    Ok(JsValue::from(Box::into_raw(decryptor) as u32))
-}
-
-/// Returns true if this decryptor requires identities.
-#[wasm_bindgen]
-pub fn decryptor_requires_identities(decryptor: u32) -> bool {
-    let decryptor = unsafe { &mut *(decryptor as *mut Decryptor) };
-    decryptor.is_recipients()
-}
-
-/// Returns true if this decryptor requires a passphrase.
-#[wasm_bindgen]
-pub fn decryptor_requires_passphrase(decryptor: u32) -> bool {
-    let decryptor = unsafe { &mut *(decryptor as *mut Decryptor) };
-    decryptor.is_passphrase()
-}
-
-/// Consumes the decryptor and returns the decrypted stream.
-#[wasm_bindgen]
-pub async fn decrypt_with_passphrase(
-    decryptor: u32,
-    passphrase: String,
-) -> Result<JsValue, JsValue> {
-    let decryptor = unsafe { Box::from_raw(decryptor as *mut Decryptor) };
-
-    let stream = decryptor
-        .decrypt_with_passphrase(&SecretString::new(passphrase))
-        .await?;
-
-    Ok(JsValue::from(Box::into_raw(Box::new(stream)) as u32))
+    Ok(decryptor)
 }
