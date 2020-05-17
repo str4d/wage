@@ -1,7 +1,7 @@
 mod utils;
 
 use futures::{
-    io::{AsyncRead, AsyncReadExt, BufReader},
+    io::{AsyncRead, BufReader},
     ready,
     stream::Stream,
     task::{Context, Poll},
@@ -14,7 +14,6 @@ use std::pin::Pin;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_streams::readable::{IntoStream, ReadableStream, ReadableStreamDefaultReader};
-use web_sys::console;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -157,28 +156,17 @@ pub fn decryptor_requires_passphrase(decryptor: u32) -> bool {
     decryptor.is_passphrase()
 }
 
-/// Consumes the decryptor and returns the decrypted file.
+/// Consumes the decryptor and returns the decrypted stream.
 #[wasm_bindgen]
 pub async fn decrypt_with_passphrase(
     decryptor: u32,
     passphrase: String,
 ) -> Result<JsValue, JsValue> {
     let decryptor = unsafe { Box::from_raw(decryptor as *mut Decryptor) };
-    let mut stream = decryptor
+
+    let stream = decryptor
         .decrypt_with_passphrase(&SecretString::new(passphrase))
         .await?;
 
-    let mut buf: Vec<u8> = vec![];
-    let read = stream
-        .read_to_end(&mut buf)
-        .await
-        .map_err(|e| JsValue::from_str(&format!("{}", e)))?;
-    let data = String::from_utf8(buf).unwrap();
-
-    console::log_1(&JsValue::from(data));
-
-    Ok(JsValue::from(format!(
-        "Successfuly decrypted {}-byte file with passphrase!",
-        read
-    )))
+    Ok(JsValue::from(Box::into_raw(Box::new(stream)) as u32))
 }

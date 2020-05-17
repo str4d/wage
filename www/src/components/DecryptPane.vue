@@ -2,11 +2,12 @@
   <div>
     <font-awesome-icon icon="file" size="10x" />
     <p>TODO: decryption pane.</p>
-    <div id="passphrase-section" v-if="needPassphrase">
+    <div id="passphrase-section" v-if="!fileDecrypted && needPassphrase">
       <label for="passphrase">Passphrase:</label>
       <input type="password" id="passphrase" v-model="passphrase" />
     </div>
-    <label class="button" @click="decryptFile">Decrypt</label>
+    <label class="button" v-if="!fileDecrypted" @click="decryptFile">Decrypt</label>
+    <label class="button" v-if="fileDecrypted" @click="downloadFile">Download</label>
   </div>
 </template>
 
@@ -14,6 +15,7 @@
 export default {
   name: "DecryptPane",
   props: {
+    fileDecrypted: Boolean,
     needPassphrase: Boolean
   },
   data() {
@@ -24,6 +26,9 @@ export default {
   methods: {
     decryptFile() {
       this.$emit("decrypt-with-passphrase", this.passphrase);
+    },
+    downloadFile() {
+      this.$emit("download-file");
     }
   }
 };

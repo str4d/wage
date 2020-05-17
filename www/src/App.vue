@@ -20,8 +20,10 @@
     <DecryptPane
       id="details-pane"
       v-if="decrypting"
+      v-bind:fileDecrypted="fileDecrypted"
       v-bind:needPassphrase="needPassphrase"
       v-on:decrypt-with-passphrase="decryptWithPassphrase"
+      v-on:download-file="downloadDecryptedFile"
     />
     <div id="footer">
       <p>
@@ -56,7 +58,8 @@ export default {
       wasm: null,
       encryptFiles: [],
       decryptFile: null,
-      decryptor: null
+      decryptor: null,
+      decryptedStream: null
     };
   },
   beforeCreate() {
@@ -80,6 +83,10 @@ export default {
         this.decryptor !== null &&
         this.wasm.decryptor_requires_passphrase(this.decryptor)
       );
+    },
+    // Have we successfully decrypted the file?
+    fileDecrypted() {
+      return this.decryptedStream !== null;
     }
   },
   methods: {
@@ -88,6 +95,7 @@ export default {
       this.encryptFiles.length = 0;
       this.decryptFile = null;
       this.decryptor = null;
+      this.decryptedStream = null;
     },
     // This function is called by the drop zone, so only if we are starting out,
     // or are already encrypting.
@@ -135,8 +143,11 @@ export default {
       // - Expose decryption errors in UI (e.g. wrong passphrase)
 
       this.wasm.decrypt_with_passphrase(decryptor, passphrase).then(stream => {
-        console.log(stream);
+        this.decryptedStream = stream;
       });
+    },
+    downloadDecryptedFile() {
+      console.log("TODO: Download decrypted file");
     }
   }
 };
