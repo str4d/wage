@@ -89,14 +89,6 @@ impl<'a> AsyncRead for StreamReader<'a> {
 pub struct Decryptor(u64);
 
 impl Decryptor {
-    async fn new<'a>(reader: ReadableStreamDefaultReader<'a>) -> Result<Decryptor, JsValue> {
-        let inner = age::Decryptor::new_async(StreamReader::new(reader))
-            .await
-            .map_err(|e| JsValue::from_str(&format!("{}", e)))?;
-
-        Ok(Decryptor(Box::into_raw(Box::new(inner)) as u64))
-    }
-
     fn as_ref<'a>(&self) -> &age::Decryptor<BufReader<StreamReader<'a>>> {
         unsafe { &*(self.0 as *const age::Decryptor<BufReader<StreamReader<'a>>>) }
     }
@@ -108,6 +100,24 @@ impl Decryptor {
 
 #[wasm_bindgen]
 impl Decryptor {
+    /// Attempts to parse the given file as an age-encrypted file, and returns a decryptor.
+    pub async fn new(file: web_sys::File) -> Result<Decryptor, JsValue> {
+        // Convert from the opaque web_sys::ReadableStream Rust type to the fully-functional
+        // wasm_streams::readable::ReadableStream.
+        let mut stream = ReadableStream::from_raw(
+            file.stream()
+                .unchecked_into::<wasm_streams::readable::sys::ReadableStream>(),
+        );
+
+        let reader = StreamReader::new(stream.get_reader()?);
+
+        let inner = age::Decryptor::new_async(reader)
+            .await
+            .map_err(|e| JsValue::from_str(&format!("{}", e)))?;
+
+        Ok(Decryptor(Box::into_raw(Box::new(inner)) as u64))
+    }
+
     /// Returns `true` if the file was encrypted to a list of recipients, and requires
     /// identities for decryption.
     pub fn requires_identities(&self) -> bool {
@@ -150,19 +160,4 @@ impl<'a> From<age::stream::StreamReader<BufReader<StreamReader<'a>>>> for Decryp
     fn from(stream: age::stream::StreamReader<BufReader<StreamReader<'a>>>) -> Self {
         DecryptedStream(Box::into_raw(Box::new(stream)) as u64)
     }
-}
-
-/// Attempts to parse the given file as an age-encrypted file, and returns a decryptor.
-#[wasm_bindgen]
-pub async fn decryptor_for_file(file: web_sys::File) -> Result<Decryptor, JsValue> {
-    // Convert from the opaque web_sys::ReadableStream Rust type to the fully-functional
-    // wasm_streams::readable::ReadableStream.
-    let mut stream = ReadableStream::from_raw(
-        file.stream()
-            .unchecked_into::<wasm_streams::readable::sys::ReadableStream>(),
-    );
-
-    let decryptor = Decryptor::new(stream.get_reader()?).await?;
-
-    Ok(decryptor)
 }

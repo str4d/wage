@@ -126,7 +126,7 @@ export default {
     // Decryption methods
     startDecrypt(file) {
       this.decryptFile = file;
-      this.wasm.decryptor_for_file(file).then(decryptor => {
+      this.wasm.Decryptor.new(file).then(decryptor => {
         this.decryptor = decryptor;
       });
     },
