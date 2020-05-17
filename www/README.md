@@ -1,4 +1,6 @@
-# wage-app
+# rage-encrypt-app
+
+An example webapp using the `wage` JavaScript library.
 
 ## Project setup
 ```
