@@ -50,7 +50,7 @@ export default {
   },
   beforeCreate() {
     // WASM needs to be imported asynchronously.
-    import("rage-wasm").then(wasm => {
+    import("wage").then(wasm => {
       this.wasm = wasm;
     });
   },
