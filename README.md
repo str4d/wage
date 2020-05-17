@@ -3,6 +3,40 @@
 A WASM package and web app for encrypting and decrypting age-encrypted files,
 powered by [rage](https://github.com/str4d/rage).
 
+Currently experimental, with incomplete functionality:
+
+- [x] Read a JavaScript File as a Rust stream.
+- [ ] Recipient encryption.
+- [ ] Recipient decryption.
+- [ ] Passphrase encryption.
+- [x] Passphrase decryption.
+- [ ] Expose a Rust stream to JavaScript as a user-downloadable file.
+
+## Development
+
+First, build `wage` itself as a Rust WASM package:
+```
+wasm-pack build
+```
+
+Then set up and run the webapp:
+```
+cd www
+npm install
+npm run serve
+```
+
+The webapp server will hot-reload on changes to the webapp itself. After
+making changes to the Rust WASM package, rebuild the package and restart
+the server:
+```
+[Ctrl+C]
+cd ..
+wasm-pack build
+cd www
+npm run serve
+```
+
 ## License
 
 Licensed under either of
