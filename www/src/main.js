@@ -1,6 +1,14 @@
 import Vue from 'vue'
 import App from './App.vue'
 
+import { WritableStream } from "web-streams-polyfill/ponyfill/es6";
+import streamSaver from "streamsaver";
+if (!window.WritableStream) {
+  streamSaver.WritableStream = WritableStream
+}
+streamSaver.mitm = `https://${window.location.hostname}/mitm.html?version=2.0.0`;
+window.streamSaver = streamSaver;
+
 import { library } from "@fortawesome/fontawesome-svg-core";
 import { faFile, faFileArchive } from "@fortawesome/free-solid-svg-icons";
 library.add(faFile);

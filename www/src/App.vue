@@ -144,10 +144,24 @@ export default {
       });
     },
     downloadDecryptedFile() {
-      let resp = new Response(this.decryptedStream);
-      resp.text().then(text => {
-        console.log(text);
-      });
+      // Default filename is the age-encrypted filename without the .age suffix.
+      const fileName = this.decryptFile.name.slice(0, -4);
+
+      const fileStream = window.streamSaver.createWriteStream(fileName);
+      const writer = fileStream.getWriter();
+      const reader = this.decryptedStream.getReader();
+
+      const pump = () =>
+        reader.read().then(res =>
+          res.done
+            ? writer.close().then(() => {
+                this.decryptFile = null;
+                this.decryptedStream = null;
+              })
+            : writer.write(res.value).then(pump)
+        );
+
+      pump();
     }
   }
 };
