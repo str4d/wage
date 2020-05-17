@@ -29,7 +29,7 @@ extern "C" {
 
 #[wasm_bindgen]
 pub fn greet() {
-    alert("Hello, rage-wasm!");
+    alert("Hello, wage!");
 }
 
 #[pin_project]

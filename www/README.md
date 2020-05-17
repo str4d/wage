@@ -1,4 +1,4 @@
-# rage-wasm-app
+# wage-app
 
 ## Project setup
 ```

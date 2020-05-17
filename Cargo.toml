@@ -1,5 +1,5 @@
 [package]
-name = "rage-wasm"
+name = "wage"
 version = "0.0.0"
 authors = ["Jack Grigg <thestr4d@gmail.com>"]
 edition = "2018"

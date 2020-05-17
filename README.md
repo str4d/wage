@@ -1,6 +1,7 @@
-# rage-wasm
+# wage
 
-A WASM package and web app for rage.
+A WASM package and web app for encrypting and decrypting age-encrypted files,
+powered by [rage](https://github.com/str4d/rage).
 
 ## License
 
