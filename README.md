@@ -3,7 +3,7 @@
 A WASM package and web app for encrypting and decrypting age-encrypted files,
 powered by [rage](https://github.com/str4d/rage).
 
-Currently experimental, with incomplete functionality:
+Currently an **experimental** alpha, with incomplete functionality:
 
 - [x] Read a JavaScript File as a Rust stream.
 - [ ] Recipient encryption.

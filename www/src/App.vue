@@ -23,6 +23,10 @@
       v-bind:needPassphrase="needPassphrase"
       v-on:decrypt-with-passphrase="decryptWithPassphrase"
     />
+    <div id="footer">
+      <p>This is an <strong>EXPERIMENTAL</strong> alpha version; <strong>DO NOT</strong> use it for real files yet.</p>
+      <p><a href="https://str4d.xyz/wage">Source available here!</a> Powered by <a href="https://str4d.xyz/rage">rage</a>.</p>
+    </div>
   </div>
 </template>
 
@@ -166,9 +170,12 @@ export default {
 #details-pane {
   grid-area: details-pane;
 }
+#footer {
+  grid-area: footer;
+}
 .one-column-drop-zone {
   grid-template-columns: 10fr;
-  grid-template-areas: "header" "drop-zone";
+  grid-template-areas: "header" "drop-zone" "footer";
 }
 .one-column-drop-zone .drop-zone {
   height: 100%;
@@ -177,10 +184,10 @@ export default {
   grid-gap: 20px;
   grid-template-columns: 5fr 5fr;
   grid-template-rows: 1fr 3fr 2fr;
-  grid-template-areas: "header header" "file-list details-pane" "drop-zone details-pane";
+  grid-template-areas: "header header" "file-list details-pane" "drop-zone details-pane" "footer footer";
 }
 .one-column-decrypting {
   grid-template-columns: 10fr;
-  grid-template-areas: "header" "details-pane";
+  grid-template-areas: "header" "details-pane" "footer";
 }
 </style>
