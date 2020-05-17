@@ -144,7 +144,10 @@ export default {
       });
     },
     downloadDecryptedFile() {
-      console.log("TODO: Download decrypted file");
+      let resp = new Response(this.decryptedStream);
+      resp.text().then(text => {
+        console.log(text);
+      });
     }
   }
 };

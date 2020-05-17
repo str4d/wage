@@ -84,6 +84,40 @@ impl<'a> AsyncRead for StreamReader<'a> {
     }
 }
 
+/// Wraps an `age::stream::StreamReader` in a chunked `Stream` interface.
+#[pin_project]
+struct ReadStreamer<'a> {
+    #[pin]
+    reader: age::stream::StreamReader<BufReader<StreamReader<'a>>>,
+    chunk: Vec<u8>,
+}
+
+impl<'a> ReadStreamer<'a> {
+    fn new(reader: age::stream::StreamReader<BufReader<StreamReader<'a>>>) -> Self {
+        ReadStreamer {
+            reader,
+            chunk: vec![0; 65536],
+        }
+    }
+}
+
+impl<'a> Stream for ReadStreamer<'a> {
+    type Item = Result<JsValue, JsValue>;
+
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
+        let mut this = self.project();
+
+        let chunk_size = ready!(this.reader.poll_read(cx, &mut this.chunk))
+            .map_err(|e| JsValue::from(format!("{}", e)))?;
+
+        Poll::Ready(if chunk_size > 0 {
+            Some(Ok(Uint8Array::from(&this.chunk[..chunk_size]).into()))
+        } else {
+            None
+        })
+    }
+}
+
 /// A newtype around a pointer to an [`age::Decryptor`].
 #[wasm_bindgen]
 pub struct Decryptor(u64);
@@ -139,25 +173,19 @@ impl Decryptor {
     pub async fn decrypt_with_passphrase(
         self,
         passphrase: String,
-    ) -> Result<DecryptedStream, JsValue> {
+    ) -> Result<wasm_streams::readable::sys::ReadableStream, JsValue> {
         let decryptor = match *self.into_box() {
             age::Decryptor::Recipients(_) => panic!("Shouldn't be called"),
             age::Decryptor::Passphrase(d) => d,
         };
 
-        decryptor
+        let reader = decryptor
             .decrypt_async(&SecretString::new(passphrase), None)
-            .map(DecryptedStream::from)
-            .map_err(|e| JsValue::from(format!("{}", e)))
-    }
-}
+            .map_err(|e| JsValue::from(format!("{}", e)))?;
 
-/// A newtype around a pointer to an [`age::stream::StreamReader`].
-#[wasm_bindgen]
-pub struct DecryptedStream(u64);
+        let stream: Box<dyn Stream<Item = Result<JsValue, JsValue>>> =
+            Box::new(ReadStreamer::new(reader));
 
-impl<'a> From<age::stream::StreamReader<BufReader<StreamReader<'a>>>> for DecryptedStream {
-    fn from(stream: age::stream::StreamReader<BufReader<StreamReader<'a>>>) -> Self {
-        DecryptedStream(Box::into_raw(Box::new(stream)) as u64)
+        Ok(ReadableStream::from(stream).into_raw())
     }
 }
