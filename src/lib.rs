@@ -132,7 +132,7 @@ impl<'a> Decryptor<'a> {
 pub async fn decryptor_for_file(file: web_sys::File) -> Result<JsValue, JsValue> {
     // Convert from the opaque web_sys::ReadableStream Rust type to the fully-functional
     // wasm_streams::readable::ReadableStream.
-    let mut stream = ReadableStream::from(
+    let mut stream = ReadableStream::from_raw(
         file.stream()
             .unchecked_into::<wasm_streams::readable::sys::ReadableStream>(),
     );

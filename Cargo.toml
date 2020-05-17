@@ -18,7 +18,7 @@ pin-project = "0.4"
 secrecy = "0.6"
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
-wasm-streams = { git = "https://github.com/MattiasBuelens/wasm-streams.git" }
+wasm-streams = { git = "https://github.com/MattiasBuelens/wasm-streams.git", rev = "d0c03d89cdbf7107e401aaf3081c0b02a7a0480f" }
 
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires
