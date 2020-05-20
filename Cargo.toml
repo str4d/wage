@@ -11,7 +11,7 @@ crate-type = ["cdylib", "rlib"]
 default = ["console_error_panic_hook"]
 
 [dependencies]
-age = { git = "https://github.com/str4d/rage.git", branch = "decrypt-async", features = ["async"] }
+age = { git = "https://github.com/str4d/rage.git", rev = "3274334a27e9cb3261f890a71f846d1cc75364d5", features = ["async"] }
 futures = "0.3"
 js-sys = "0.3"
 pin-project = "0.4"
@@ -49,10 +49,10 @@ wasm-bindgen-test = "0.2"
 opt-level = "s"
 
 [patch.crates-io]
-js-sys = { git = "https://github.com/str4d/wasm-bindgen.git", branch = "blob-stream" }
-wasm-bindgen = { git = "https://github.com/str4d/wasm-bindgen.git", branch = "blob-stream" }
-wasm-bindgen-futures = { git = "https://github.com/str4d/wasm-bindgen.git", branch = "blob-stream" }
-wasm-bindgen-macro = { git = "https://github.com/str4d/wasm-bindgen.git", branch = "blob-stream" }
-wasm-bindgen-macro-support = { git = "https://github.com/str4d/wasm-bindgen.git", branch = "blob-stream" }
-wasm-bindgen-shared = { git = "https://github.com/str4d/wasm-bindgen.git", branch = "blob-stream" }
-web-sys = { git = "https://github.com/str4d/wasm-bindgen.git", branch = "blob-stream" }
+js-sys = { git = "https://github.com/rustwasm/wasm-bindgen.git", rev = "1e1cab6202519dec2c30314e26aa3c8f601f3506" }
+wasm-bindgen = { git = "https://github.com/rustwasm/wasm-bindgen.git", rev = "1e1cab6202519dec2c30314e26aa3c8f601f3506" }
+wasm-bindgen-futures = { git = "https://github.com/rustwasm/wasm-bindgen.git", rev = "1e1cab6202519dec2c30314e26aa3c8f601f3506" }
+wasm-bindgen-macro = { git = "https://github.com/rustwasm/wasm-bindgen.git", rev = "1e1cab6202519dec2c30314e26aa3c8f601f3506" }
+wasm-bindgen-macro-support = { git = "https://github.com/rustwasm/wasm-bindgen.git", rev = "1e1cab6202519dec2c30314e26aa3c8f601f3506" }
+wasm-bindgen-shared = { git = "https://github.com/rustwasm/wasm-bindgen.git", rev = "1e1cab6202519dec2c30314e26aa3c8f601f3506" }
+web-sys = { git = "https://github.com/rustwasm/wasm-bindgen.git", rev = "1e1cab6202519dec2c30314e26aa3c8f601f3506" }
