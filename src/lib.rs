@@ -1,19 +1,11 @@
+mod shim;
 mod utils;
 
-use futures::{
-    io::{AsyncRead, BufReader},
-    ready,
-    stream::Stream,
-    task::{Context, Poll},
-};
-use js_sys::Uint8Array;
-use pin_project::pin_project;
+use futures::{io::BufReader, stream::Stream};
 use secrecy::SecretString;
-use std::io;
-use std::pin::Pin;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use wasm_streams::readable::{IntoStream, ReadableStream, ReadableStreamDefaultReader};
+use wasm_streams::readable::ReadableStream;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -31,104 +23,17 @@ pub fn greet() {
     alert("Hello, wage!");
 }
 
-#[pin_project]
-struct StreamReader<'a> {
-    #[pin]
-    stream: IntoStream<'a>,
-    cached_bytes: Option<Vec<u8>>,
-}
-
-impl<'a> StreamReader<'a> {
-    fn new(reader: ReadableStreamDefaultReader<'a>) -> Self {
-        StreamReader {
-            stream: reader.into_stream(),
-            cached_bytes: None,
-        }
-    }
-}
-
-impl<'a> AsyncRead for StreamReader<'a> {
-    fn poll_read(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context,
-        buf: &mut [u8],
-    ) -> Poll<Result<usize, io::Error>> {
-        if self.cached_bytes.is_none() {
-            match ready!(self.as_mut().project().stream.poll_next(cx)) {
-                Some(Ok(value)) => {
-                    self.cached_bytes = Some(Uint8Array::from(value).to_vec());
-                }
-                Some(Err(e)) => {
-                    return Poll::Ready(Err(io::Error::new(
-                        io::ErrorKind::Other,
-                        format!("JS error: {:?}", e),
-                    )))
-                }
-                None => return Poll::Ready(Ok(0)),
-            }
-        }
-
-        // We are guaranteed to have cached bytes at this point.
-        let mut cached = self.cached_bytes.take().unwrap();
-
-        let read = if buf.len() < cached.len() {
-            buf.copy_from_slice(&cached[..buf.len()]);
-            self.cached_bytes = Some(cached.split_off(buf.len()));
-            buf.len()
-        } else {
-            buf[..cached.len()].copy_from_slice(&cached);
-            cached.len()
-        };
-
-        Poll::Ready(Ok(read))
-    }
-}
-
-/// Wraps an `age::stream::StreamReader` in a chunked `Stream` interface.
-#[pin_project]
-struct ReadStreamer<'a> {
-    #[pin]
-    reader: age::stream::StreamReader<BufReader<StreamReader<'a>>>,
-    chunk: Vec<u8>,
-}
-
-impl<'a> ReadStreamer<'a> {
-    fn new(reader: age::stream::StreamReader<BufReader<StreamReader<'a>>>) -> Self {
-        ReadStreamer {
-            reader,
-            chunk: vec![0; 65536],
-        }
-    }
-}
-
-impl<'a> Stream for ReadStreamer<'a> {
-    type Item = Result<JsValue, JsValue>;
-
-    fn poll_next(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
-        let mut this = self.project();
-
-        let chunk_size = ready!(this.reader.poll_read(cx, &mut this.chunk))
-            .map_err(|e| JsValue::from(format!("{}", e)))?;
-
-        Poll::Ready(if chunk_size > 0 {
-            Some(Ok(Uint8Array::from(&this.chunk[..chunk_size]).into()))
-        } else {
-            None
-        })
-    }
-}
-
 /// A newtype around a pointer to an [`age::Decryptor`].
 #[wasm_bindgen]
 pub struct Decryptor(u64);
 
 impl Decryptor {
-    fn as_ref<'a>(&self) -> &age::Decryptor<BufReader<StreamReader<'a>>> {
-        unsafe { &*(self.0 as *const age::Decryptor<BufReader<StreamReader<'a>>>) }
+    fn as_ref<'a>(&self) -> &age::Decryptor<BufReader<shim::StreamReader<'a>>> {
+        unsafe { &*(self.0 as *const age::Decryptor<BufReader<shim::StreamReader<'a>>>) }
     }
 
-    fn into_box<'a>(self) -> Box<age::Decryptor<BufReader<StreamReader<'a>>>> {
-        unsafe { Box::from_raw(self.0 as *mut age::Decryptor<BufReader<StreamReader<'a>>>) }
+    fn into_box<'a>(self) -> Box<age::Decryptor<BufReader<shim::StreamReader<'a>>>> {
+        unsafe { Box::from_raw(self.0 as *mut age::Decryptor<BufReader<shim::StreamReader<'a>>>) }
     }
 }
 
@@ -143,7 +48,7 @@ impl Decryptor {
                 .unchecked_into::<wasm_streams::readable::sys::ReadableStream>(),
         );
 
-        let reader = StreamReader::new(stream.get_reader()?);
+        let reader = shim::StreamReader::new(stream.get_reader()?);
 
         let inner = age::Decryptor::new_async(reader)
             .await
@@ -184,7 +89,7 @@ impl Decryptor {
             .map_err(|e| JsValue::from(format!("{}", e)))?;
 
         let stream: Box<dyn Stream<Item = Result<JsValue, JsValue>>> =
-            Box::new(ReadStreamer::new(reader));
+            Box::new(shim::ReadStreamer::new(reader));
 
         Ok(ReadableStream::from(stream).into_raw())
     }
