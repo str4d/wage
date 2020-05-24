@@ -11,7 +11,7 @@ crate-type = ["cdylib", "rlib"]
 default = ["console_error_panic_hook"]
 
 [dependencies]
-age = { git = "https://github.com/str4d/rage.git", rev = "3274334a27e9cb3261f890a71f846d1cc75364d5", features = ["async"] }
+age = { git = "https://github.com/str4d/rage.git", rev = "103ea61c43b09060fe000bc6bbfb1dabcb249849", features = ["async"] }
 futures = "0.3"
 js-sys = "0.3"
 pin-project = "0.4"
