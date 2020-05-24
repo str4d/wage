@@ -41,6 +41,9 @@ impl Decryptor {
 impl Decryptor {
     /// Attempts to parse the given file as an age-encrypted file, and returns a decryptor.
     pub async fn new(file: web_sys::File) -> Result<Decryptor, JsValue> {
+        // This is an entrance from JS to our WASM APIs; perform one-time setup steps.
+        utils::set_panic_hook();
+
         // Convert from the opaque web_sys::ReadableStream Rust type to the fully-functional
         // wasm_streams::readable::ReadableStream.
         let mut stream = ReadableStream::from_raw(
