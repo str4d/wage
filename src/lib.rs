@@ -64,7 +64,6 @@ impl Decryptor {
     /// identities for decryption.
     pub fn requires_identities(&self) -> bool {
         match &self.as_ref() {
-            age::Decryptor::Recipients(_) => true,
             age::Decryptor::Passphrase(_) => false,
         }
     }
@@ -72,7 +71,6 @@ impl Decryptor {
     /// Returns `true` if the file was encrypted to a passphrase.
     pub fn requires_passphrase(&self) -> bool {
         match &self.as_ref() {
-            age::Decryptor::Recipients(_) => false,
             age::Decryptor::Passphrase(_) => true,
         }
     }
@@ -83,7 +81,6 @@ impl Decryptor {
         passphrase: String,
     ) -> Result<wasm_streams::readable::sys::ReadableStream, JsValue> {
         let decryptor = match *self.into_box() {
-            age::Decryptor::Recipients(_) => panic!("Shouldn't be called"),
             age::Decryptor::Passphrase(d) => d,
         };
 

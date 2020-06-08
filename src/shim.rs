@@ -68,12 +68,12 @@ impl<'a> AsyncRead for StreamReader<'a> {
 #[pin_project]
 pub(crate) struct ReadStreamer<'a> {
     #[pin]
-    reader: age::stream::StreamReader<BufReader<StreamReader<'a>>>,
+    reader: BufReader<StreamReader<'a>>,
     chunk: Vec<u8>,
 }
 
 impl<'a> ReadStreamer<'a> {
-    pub(crate) fn new(reader: age::stream::StreamReader<BufReader<StreamReader<'a>>>) -> Self {
+    pub(crate) fn new(reader: BufReader<StreamReader<'a>>) -> Self {
         ReadStreamer {
             reader,
             chunk: vec![0; 65536],
