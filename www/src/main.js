@@ -8,7 +8,7 @@ if (!window.WritableStream) {
 }
 streamSaver.mitm = new URL(window.location);
 streamSaver.mitm.pathname = 'mitm.html'
-streamSaver.mitm.search = 'version=2.0.0'
+streamSaver.mitm.search = `version=${streamSaver.version.full}`
 window.streamSaver = streamSaver;
 
 import { library } from "@fortawesome/fontawesome-svg-core";
