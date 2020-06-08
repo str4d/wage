@@ -2,7 +2,6 @@ mod shim;
 mod utils;
 
 use futures::{io::BufReader, stream::Stream};
-use secrecy::SecretString;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_streams::readable::ReadableStream;
@@ -28,10 +27,6 @@ pub fn greet() {
 pub struct Decryptor(u64);
 
 impl Decryptor {
-    fn as_ref<'a>(&self) -> &age::Decryptor<BufReader<shim::StreamReader<'a>>> {
-        unsafe { &*(self.0 as *const age::Decryptor<BufReader<shim::StreamReader<'a>>>) }
-    }
-
     fn into_box<'a>(self) -> Box<age::Decryptor<BufReader<shim::StreamReader<'a>>>> {
         unsafe { Box::from_raw(self.0 as *mut age::Decryptor<BufReader<shim::StreamReader<'a>>>) }
     }
@@ -63,29 +58,22 @@ impl Decryptor {
     /// Returns `true` if the file was encrypted to a list of recipients, and requires
     /// identities for decryption.
     pub fn requires_identities(&self) -> bool {
-        match &self.as_ref() {
-            age::Decryptor::Passphrase(_) => false,
-        }
+        false
     }
 
     /// Returns `true` if the file was encrypted to a passphrase.
     pub fn requires_passphrase(&self) -> bool {
-        match &self.as_ref() {
-            age::Decryptor::Passphrase(_) => true,
-        }
+        true
     }
 
     /// Consumes the decryptor and returns the decrypted stream.
     pub async fn decrypt_with_passphrase(
         self,
-        passphrase: String,
     ) -> Result<wasm_streams::readable::sys::ReadableStream, JsValue> {
-        let decryptor = match *self.into_box() {
-            age::Decryptor::Passphrase(d) => d,
-        };
+        let decryptor = self.into_box();
 
         let reader = decryptor
-            .decrypt_async(&SecretString::new(passphrase), None)
+            .decrypt_async()
             .map_err(|e| JsValue::from(format!("{}", e)))?;
 
         let stream: Box<dyn Stream<Item = Result<JsValue, JsValue>>> =
