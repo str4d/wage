@@ -59,7 +59,8 @@ export default {
       encryptFiles: [],
       decryptFile: null,
       decryptor: null,
-      decryptedStream: null
+      decryptedStream: null,
+      downloadStream: null
     };
   },
   beforeCreate() {
@@ -67,6 +68,10 @@ export default {
     import("wage").then(wasm => {
       this.wasm = wasm;
     });
+  },
+  created() {
+    window.addEventListener("beforeunload", this.checkDownloads);
+    window.addEventListener("unload", this.cancelDownloads);
   },
   computed: {
     // Are we in "encrypting" mode?
@@ -84,6 +89,9 @@ export default {
     // Have we successfully decrypted the file?
     fileDecrypted() {
       return this.decryptedStream !== null;
+    },
+    fileDownloading() {
+      return this.downloadStream !== null;
     }
   },
   methods: {
@@ -147,8 +155,8 @@ export default {
       // Default filename is the age-encrypted filename without the .age suffix.
       const fileName = this.decryptFile.name.slice(0, -4);
 
-      const fileStream = window.streamSaver.createWriteStream(fileName);
-      const writer = fileStream.getWriter();
+      this.downloadStream = window.streamSaver.createWriteStream(fileName);
+      const writer = this.downloadStream.getWriter();
       const reader = this.decryptedStream.getReader();
 
       const pump = () =>
@@ -157,11 +165,26 @@ export default {
             ? writer.close().then(() => {
                 this.decryptFile = null;
                 this.decryptedStream = null;
+                this.downloadStream = null;
               })
             : writer.write(res.value).then(pump)
         );
 
       pump();
+    },
+    // File downloads happen in the browser, so navigating away from the page
+    // will break any in-progress downloads.
+    checkDownloads(evt) {
+      if (this.fileDownloading) {
+        evt.returnValue =
+          "A file is still downloading; leaving will break the download. Are you sure you want to leave?";
+      }
+    },
+    cancelDownloads() {
+      if (this.fileDownloading) {
+        this.downloadStream.abort();
+        this.downloadStream = null;
+      }
     }
   }
 };
