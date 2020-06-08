@@ -1,7 +1,7 @@
 mod shim;
 mod utils;
 
-use futures::{io::BufReader, stream::Stream};
+use futures::stream::Stream;
 use secrecy::SecretString;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
@@ -23,17 +23,20 @@ pub fn greet() {
     alert("Hello, wage!");
 }
 
+/// Type alias to ensure consistent types across the JavaScript type erasure.
+type AgeDecryptor<'a> = age::Decryptor<shim::StreamReader<'a>>;
+
 /// A newtype around a pointer to an [`age::Decryptor`].
 #[wasm_bindgen]
 pub struct Decryptor(u64);
 
 impl Decryptor {
-    fn as_ref<'a>(&self) -> &age::Decryptor<BufReader<shim::StreamReader<'a>>> {
-        unsafe { &*(self.0 as *const age::Decryptor<BufReader<shim::StreamReader<'a>>>) }
+    fn as_ref<'a>(&self) -> &AgeDecryptor<'a> {
+        unsafe { &*(self.0 as *const AgeDecryptor<'a>) }
     }
 
-    fn into_box<'a>(self) -> Box<age::Decryptor<BufReader<shim::StreamReader<'a>>>> {
-        unsafe { Box::from_raw(self.0 as *mut age::Decryptor<BufReader<shim::StreamReader<'a>>>) }
+    fn into_box<'a>(self) -> Box<AgeDecryptor<'a>> {
+        unsafe { Box::from_raw(self.0 as *mut AgeDecryptor<'a>) }
     }
 }
 
@@ -53,7 +56,7 @@ impl Decryptor {
 
         let reader = shim::StreamReader::new(stream.get_reader()?);
 
-        let inner = age::Decryptor::new_async(reader)
+        let inner: AgeDecryptor<'_> = age::Decryptor::new_async(reader)
             .await
             .map_err(|e| JsValue::from_str(&format!("{}", e)))?;
 

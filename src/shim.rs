@@ -1,5 +1,5 @@
 use futures::{
-    io::{AsyncRead, BufReader},
+    io::AsyncRead,
     ready,
     stream::Stream,
     task::{Context, Poll},
@@ -68,12 +68,12 @@ impl<'a> AsyncRead for StreamReader<'a> {
 #[pin_project]
 pub(crate) struct ReadStreamer<'a> {
     #[pin]
-    reader: age::stream::StreamReader<BufReader<StreamReader<'a>>>,
+    reader: age::stream::StreamReader<StreamReader<'a>>,
     chunk: Vec<u8>,
 }
 
 impl<'a> ReadStreamer<'a> {
-    pub(crate) fn new(reader: age::stream::StreamReader<BufReader<StreamReader<'a>>>) -> Self {
+    pub(crate) fn new(reader: age::stream::StreamReader<StreamReader<'a>>) -> Self {
         ReadStreamer {
             reader,
             chunk: vec![0; 65536],
