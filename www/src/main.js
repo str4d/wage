@@ -6,7 +6,9 @@ import streamSaver from "streamsaver";
 if (!window.WritableStream) {
   streamSaver.WritableStream = WritableStream
 }
-streamSaver.mitm = `https://${window.location.hostname}/mitm.html?version=2.0.0`;
+streamSaver.mitm = new URL(window.location);
+streamSaver.mitm.pathname = 'mitm.html'
+streamSaver.mitm.search = 'version=2.0.0'
 window.streamSaver = streamSaver;
 
 import { library } from "@fortawesome/fontawesome-svg-core";
