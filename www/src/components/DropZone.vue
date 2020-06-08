@@ -41,7 +41,6 @@ export default {
 #drop-zone {
   border: 2px dashed #ccc;
   border-radius: 20px;
-  width: 100%;
   font-family: sans-serif;
   padding: 20px;
 }

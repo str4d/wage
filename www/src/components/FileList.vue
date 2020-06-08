@@ -21,7 +21,6 @@ export default {
 
 <style scoped>
 #file-list {
-  width: 100%;
   font-family: sans-serif;
   padding: 20px;
 }
