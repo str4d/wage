@@ -11,6 +11,7 @@
     "@fortawesome/fontawesome-svg-core": "^1.2.28",
     "@fortawesome/free-solid-svg-icons": "^5.13.0",
     "@fortawesome/vue-fontawesome": "^0.1.9",
+    "@types/streamsaver": "^2.0.0",
     "core-js": "^3.6.4",
     "streamsaver": "^2.0.4",
     "vue": "^2.6.11",
