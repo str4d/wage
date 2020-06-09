@@ -13,6 +13,7 @@
     "@fortawesome/vue-fontawesome": "^0.1.9",
     "@types/streamsaver": "^2.0.0",
     "core-js": "^3.6.4",
+    "font-awesome-filetypes": "^2.1.0",
     "streamsaver": "^2.0.4",
     "vue": "^2.6.11",
     "wage": "file:../pkg",
