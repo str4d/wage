@@ -20,6 +20,12 @@ type AgeDecryptor<'a> = age::Decryptor<shim::StreamReader<'a>>;
 #[wasm_bindgen]
 pub struct Decryptor(u64);
 
+impl<'a> From<AgeDecryptor<'a>> for Decryptor {
+    fn from(inner: AgeDecryptor<'a>) -> Self {
+        Decryptor(Box::into_raw(Box::new(inner)) as u64)
+    }
+}
+
 impl Decryptor {
     fn as_ref<'a>(&self) -> &AgeDecryptor<'a> {
         unsafe { &*(self.0 as *const AgeDecryptor<'a>) }
@@ -46,11 +52,11 @@ impl Decryptor {
 
         let reader = shim::StreamReader::new(stream.get_reader()?);
 
-        let inner: AgeDecryptor<'_> = age::Decryptor::new_async(reader)
+        let inner = age::Decryptor::new_async(reader)
             .await
             .map_err(|e| JsValue::from_str(&format!("{}", e)))?;
 
-        Ok(Decryptor(Box::into_raw(Box::new(inner)) as u64))
+        Ok(inner.into())
     }
 
     /// Returns `true` if the file was encrypted to a list of recipients, and requires
