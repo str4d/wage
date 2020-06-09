@@ -1,7 +1,6 @@
 mod shim;
 mod utils;
 
-use futures::stream::Stream;
 use secrecy::SecretString;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
@@ -45,12 +44,9 @@ impl Decryptor {
 
         // Convert from the opaque web_sys::ReadableStream Rust type to the fully-functional
         // wasm_streams::readable::ReadableStream.
-        let mut stream = ReadableStream::from_raw(
-            file.stream()
-                .unchecked_into::<wasm_streams::readable::sys::ReadableStream>(),
-        );
+        let mut stream = ReadableStream::from_raw(file.stream().dyn_into().unwrap_throw());
 
-        let reader = shim::StreamReader::new(stream.get_reader()?);
+        let reader = shim::StreamReader::new(stream.get_reader());
 
         let inner = age::Decryptor::new_async(reader)
             .await
@@ -90,9 +86,6 @@ impl Decryptor {
             .decrypt_async(&SecretString::new(passphrase), None)
             .map_err(|e| JsValue::from(format!("{}", e)))?;
 
-        let stream: Box<dyn Stream<Item = Result<JsValue, JsValue>>> =
-            Box::new(shim::ReadStreamer::new(reader));
-
-        Ok(ReadableStream::from(stream).into_raw())
+        Ok(ReadableStream::from_stream(shim::ReadStreamer::new(reader)).into_raw())
     }
 }
