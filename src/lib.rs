@@ -1,7 +1,10 @@
 mod shim;
 mod utils;
 
+use futures::{AsyncRead, TryStreamExt};
+use js_sys::Uint8Array;
 use secrecy::SecretString;
+use std::io;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_streams::readable::ReadableStream;
@@ -13,7 +16,7 @@ use wasm_streams::readable::ReadableStream;
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 /// Type alias to ensure consistent types across the JavaScript type erasure.
-type AgeDecryptor<'a> = age::Decryptor<shim::StreamReader<'a>>;
+type AgeDecryptor<'a> = age::Decryptor<Box<dyn AsyncRead + Unpin + 'a>>;
 
 /// A newtype around a pointer to an [`age::Decryptor`].
 #[wasm_bindgen]
@@ -46,9 +49,16 @@ impl Decryptor {
         // wasm_streams::readable::ReadableStream.
         let mut stream = ReadableStream::from_raw(file.stream().dyn_into().unwrap_throw());
 
-        let reader = shim::StreamReader::new(stream.get_reader());
+        let reader: Box<dyn AsyncRead + Unpin> = Box::new(
+            stream
+                .get_reader()
+                .into_stream()
+                .map_ok(|chunk| Uint8Array::from(chunk).to_vec())
+                .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("JS error: {:?}", e)))
+                .into_async_read(),
+        );
 
-        let inner = age::Decryptor::new_async(reader)
+        let inner: AgeDecryptor = age::Decryptor::new_async(reader)
             .await
             .map_err(|e| JsValue::from_str(&format!("{}", e)))?;
 
