@@ -101,6 +101,7 @@ export default {
       this.decryptFile = null;
       this.decryptor = null;
       this.decryptedStream = null;
+      this.downloadStream = null;
     },
     // This function is called by the drop zone, so only if we are starting out,
     // or are already encrypting.
@@ -156,19 +157,25 @@ export default {
       const fileName = this.decryptFile.name.slice(0, -4);
 
       this.downloadStream = window.streamSaver.createWriteStream(fileName);
-      const writer = this.downloadStream.getWriter();
+
+      // Use the more optimized ReadableStream.pipeTo if available.
+      if (window.WritableStream && this.decryptedStream.pipeTo) {
+        return this.decryptedStream
+          .pipeTo(this.downloadStream)
+          .then(this.reset);
+      }
+
       const reader = this.decryptedStream.getReader();
+      const writer = this.downloadStream.getWriter();
 
       const pump = () =>
-        reader.read().then(res =>
-          res.done
-            ? writer.close().then(() => {
-                this.decryptFile = null;
-                this.decryptedStream = null;
-                this.downloadStream = null;
-              })
-            : writer.write(res.value).then(pump)
-        );
+        reader
+          .read()
+          .then(res =>
+            res.done
+              ? writer.close().then(this.reset)
+              : writer.write(res.value).then(pump)
+          );
 
       pump();
     },
