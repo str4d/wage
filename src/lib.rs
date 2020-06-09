@@ -13,16 +13,6 @@ use wasm_streams::readable::ReadableStream;
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
-#[wasm_bindgen]
-extern "C" {
-    fn alert(s: &str);
-}
-
-#[wasm_bindgen]
-pub fn greet() {
-    alert("Hello, wage!");
-}
-
 /// Type alias to ensure consistent types across the JavaScript type erasure.
 type AgeDecryptor<'a> = age::Decryptor<shim::StreamReader<'a>>;
 
