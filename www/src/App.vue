@@ -97,7 +97,7 @@ export default {
   methods: {
     // Reset application to initial state.
     reset() {
-      this.encryptFiles.length = 0;
+      this.encryptFiles = [];
       this.decryptFile = null;
       this.decryptor = null;
       this.decryptedStream = null;
