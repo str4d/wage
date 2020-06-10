@@ -17,28 +17,9 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 const CHUNK_SIZE: usize = 65536;
 
-/// Type alias to ensure consistent types across the JavaScript type erasure.
-type AgeDecryptor = age::Decryptor<Box<dyn AsyncRead + Unpin>>;
-
-/// A newtype around a pointer to an [`age::Decryptor`].
+/// A newtype around an [`age::Decryptor`].
 #[wasm_bindgen]
-pub struct Decryptor(u64);
-
-impl From<AgeDecryptor> for Decryptor {
-    fn from(inner: AgeDecryptor) -> Self {
-        Decryptor(Box::into_raw(Box::new(inner)) as u64)
-    }
-}
-
-impl Decryptor {
-    fn as_ref(&self) -> &AgeDecryptor {
-        unsafe { &*(self.0 as *const AgeDecryptor) }
-    }
-
-    fn into_box(self) -> Box<AgeDecryptor> {
-        unsafe { Box::from_raw(self.0 as *mut AgeDecryptor) }
-    }
-}
+pub struct Decryptor(age::Decryptor<Box<dyn AsyncRead + Unpin>>);
 
 #[wasm_bindgen]
 impl Decryptor {
@@ -59,17 +40,17 @@ impl Decryptor {
                 .into_async_read(),
         );
 
-        let inner: AgeDecryptor = age::Decryptor::new_async(reader)
+        let inner = age::Decryptor::new_async(reader)
             .await
             .map_err(|e| JsValue::from_str(&format!("{}", e)))?;
 
-        Ok(inner.into())
+        Ok(Decryptor(inner))
     }
 
     /// Returns `true` if the file was encrypted to a list of recipients, and requires
     /// identities for decryption.
     pub fn requires_identities(&self) -> bool {
-        match &self.as_ref() {
+        match self.0 {
             age::Decryptor::Recipients(_) => true,
             age::Decryptor::Passphrase(_) => false,
         }
@@ -77,7 +58,7 @@ impl Decryptor {
 
     /// Returns `true` if the file was encrypted to a passphrase.
     pub fn requires_passphrase(&self) -> bool {
-        match &self.as_ref() {
+        match self.0 {
             age::Decryptor::Recipients(_) => false,
             age::Decryptor::Passphrase(_) => true,
         }
@@ -88,7 +69,7 @@ impl Decryptor {
         self,
         passphrase: String,
     ) -> Result<wasm_streams::readable::sys::ReadableStream, JsValue> {
-        let decryptor = match *self.into_box() {
+        let decryptor = match self.0 {
             age::Decryptor::Recipients(_) => panic!("Shouldn't be called"),
             age::Decryptor::Passphrase(d) => d,
         };
