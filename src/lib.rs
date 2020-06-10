@@ -15,6 +15,8 @@ use wasm_streams::readable::ReadableStream;
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
+const CHUNK_SIZE: usize = 65536;
+
 /// Type alias to ensure consistent types across the JavaScript type erasure.
 type AgeDecryptor = age::Decryptor<Box<dyn AsyncRead + Unpin>>;
 
@@ -95,6 +97,6 @@ impl Decryptor {
             .decrypt_async(&SecretString::new(passphrase), None)
             .map_err(|e| JsValue::from(format!("{}", e)))?;
 
-        Ok(ReadableStream::from_stream(shim::ReadStreamer::new(reader)).into_raw())
+        Ok(ReadableStream::from_stream(shim::ReadStreamer::new(reader, CHUNK_SIZE)).into_raw())
     }
 }

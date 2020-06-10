@@ -9,24 +9,24 @@ use pin_project::pin_project;
 use std::pin::Pin;
 use wasm_bindgen::prelude::*;
 
-/// Wraps an `age::stream::StreamReader` in a chunked `Stream` interface.
+/// Wraps an `AsyncRead` in a chunked `Stream` interface.
 #[pin_project]
-pub(crate) struct ReadStreamer {
+pub(crate) struct ReadStreamer<R: AsyncRead + Unpin> {
     #[pin]
-    reader: age::stream::StreamReader<Box<dyn AsyncRead + Unpin>>,
+    reader: R,
     chunk: Vec<u8>,
 }
 
-impl ReadStreamer {
-    pub(crate) fn new(reader: age::stream::StreamReader<Box<dyn AsyncRead + Unpin>>) -> Self {
+impl<R: AsyncRead + Unpin> ReadStreamer<R> {
+    pub(crate) fn new(reader: R, max_chunk_size: usize) -> Self {
         ReadStreamer {
             reader,
-            chunk: vec![0; 65536],
+            chunk: vec![0; max_chunk_size],
         }
     }
 }
 
-impl Stream for ReadStreamer {
+impl<R: AsyncRead + Unpin> Stream for ReadStreamer<R> {
     type Item = Result<JsValue, JsValue>;
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
