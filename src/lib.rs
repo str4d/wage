@@ -16,25 +16,25 @@ use wasm_streams::readable::ReadableStream;
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 /// Type alias to ensure consistent types across the JavaScript type erasure.
-type AgeDecryptor<'a> = age::Decryptor<Box<dyn AsyncRead + Unpin + 'a>>;
+type AgeDecryptor = age::Decryptor<Box<dyn AsyncRead + Unpin>>;
 
 /// A newtype around a pointer to an [`age::Decryptor`].
 #[wasm_bindgen]
 pub struct Decryptor(u64);
 
-impl<'a> From<AgeDecryptor<'a>> for Decryptor {
-    fn from(inner: AgeDecryptor<'a>) -> Self {
+impl From<AgeDecryptor> for Decryptor {
+    fn from(inner: AgeDecryptor) -> Self {
         Decryptor(Box::into_raw(Box::new(inner)) as u64)
     }
 }
 
 impl Decryptor {
-    fn as_ref<'a>(&self) -> &AgeDecryptor<'a> {
-        unsafe { &*(self.0 as *const AgeDecryptor<'a>) }
+    fn as_ref(&self) -> &AgeDecryptor {
+        unsafe { &*(self.0 as *const AgeDecryptor) }
     }
 
-    fn into_box<'a>(self) -> Box<AgeDecryptor<'a>> {
-        unsafe { Box::from_raw(self.0 as *mut AgeDecryptor<'a>) }
+    fn into_box(self) -> Box<AgeDecryptor> {
+        unsafe { Box::from_raw(self.0 as *mut AgeDecryptor) }
     }
 }
 
@@ -47,11 +47,10 @@ impl Decryptor {
 
         // Convert from the opaque web_sys::ReadableStream Rust type to the fully-functional
         // wasm_streams::readable::ReadableStream.
-        let mut stream = ReadableStream::from_raw(file.stream().dyn_into().unwrap_throw());
+        let stream = ReadableStream::from_raw(file.stream().dyn_into().unwrap_throw());
 
         let reader: Box<dyn AsyncRead + Unpin> = Box::new(
             stream
-                .get_reader()
                 .into_stream()
                 .map_ok(|chunk| Uint8Array::from(chunk).to_vec())
                 .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("JS error: {:?}", e)))
