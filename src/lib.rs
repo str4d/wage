@@ -36,7 +36,9 @@ impl Decryptor {
 
         // Convert from the opaque web_sys::ReadableStream Rust type to the fully-functional
         // wasm_streams::readable::ReadableStream.
-        let stream = ReadableStream::from_raw(file.stream().dyn_into().unwrap_throw());
+        // TODO: Switching from ponyfill to polyfill causes `.dyn_into().unwrap_throw()`
+        // to throw, while `.unchecked_into()` works fine. I do not understand why :(
+        let stream = ReadableStream::from_raw(file.stream().unchecked_into());
 
         let reader: Box<dyn AsyncRead + Unpin> =
             Box::new(age::armor::ArmoredReader::from_async_reader(

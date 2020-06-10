@@ -1,11 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 
-import { WritableStream } from "web-streams-polyfill/ponyfill/es6";
 import streamSaver from "streamsaver";
-if (!window.WritableStream) {
-  streamSaver.WritableStream = WritableStream
-}
 streamSaver.mitm = new URL(window.location);
 streamSaver.mitm.pathname = 'mitm.html'
 streamSaver.mitm.search = `version=${streamSaver.version.full}`
