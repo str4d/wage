@@ -28,8 +28,8 @@
     <div id="footer">
       <p>
         This is an
-        <strong>EXPERIMENTAL</strong> alpha version;
-        <strong>DO NOT</strong> use it for real files yet.
+        <strong>EXPERIMENTAL</strong> alpha version; <strong>DO NOT</strong> use
+        it for real files yet.
       </p>
       <p>
         <a href="https://str4d.xyz/wage">Source available here!</a> Powered by
@@ -51,7 +51,7 @@ export default {
     DecryptPane,
     DropZone,
     EncryptPane,
-    FileList
+    FileList,
   },
   data() {
     return {
@@ -60,12 +60,12 @@ export default {
       decryptFile: null,
       decryptor: null,
       decryptedStream: null,
-      downloadStream: null
+      downloadStream: null,
     };
   },
   beforeCreate() {
     // WASM needs to be imported asynchronously.
-    import("wage").then(wasm => {
+    import("wage").then((wasm) => {
       this.wasm = wasm;
     });
   },
@@ -92,7 +92,7 @@ export default {
     },
     fileDownloading() {
       return this.downloadStream !== null;
-    }
+    },
   },
   methods: {
     // Reset application to initial state.
@@ -111,7 +111,7 @@ export default {
         this.addFilesToEncrypt(files);
       } else {
         // Search for a decryptable file.
-        var decryptIndex = [...files].findIndex(f => {
+        var decryptIndex = [...files].findIndex((f) => {
           return f.name.endsWith(".age");
         });
 
@@ -125,7 +125,7 @@ export default {
     },
     // Encryption methods
     addFilesToEncrypt(files) {
-      [...files].forEach(f => {
+      [...files].forEach((f) => {
         this.encryptFiles.push(f);
       });
     },
@@ -135,7 +135,7 @@ export default {
     // Decryption methods
     startDecrypt(file) {
       this.decryptFile = file;
-      this.wasm.Decryptor.new(file).then(decryptor => {
+      this.wasm.Decryptor.new(file).then((decryptor) => {
         this.decryptor = decryptor;
       });
     },
@@ -148,7 +148,7 @@ export default {
       // - Disable Decrypt button while decrypting, re-enable on error
       // - Expose decryption errors in UI (e.g. wrong passphrase)
 
-      decryptor.decrypt_with_passphrase(passphrase).then(stream => {
+      decryptor.decrypt_with_passphrase(passphrase).then((stream) => {
         this.decryptedStream = stream;
       });
     },
@@ -171,7 +171,7 @@ export default {
       const pump = () =>
         reader
           .read()
-          .then(res =>
+          .then((res) =>
             res.done
               ? writer.close().then(this.reset)
               : writer.write(res.value).then(pump)
@@ -192,8 +192,8 @@ export default {
         this.downloadStream.abort();
         this.downloadStream = null;
       }
-    }
-  }
+    },
+  },
 };
 </script>
 

@@ -2,7 +2,9 @@
   <ul id="file-list" class="fa-ul">
     <li v-for="(file, index) in files" :key="file.name">
       <span class="fa-li">
-        <font-awesome-icon :icon="getClassNameForMimeType(file.type).substring(3)" />
+        <font-awesome-icon
+          :icon="getClassNameForMimeType(file.type).substring(3)"
+        />
       </span>
       {{ file.name }} ({{ file.size }} b)
       <button @click="removeFile(index)" title="Remove">X</button>
@@ -20,8 +22,8 @@ export default {
     getClassNameForMimeType,
     removeFile(index) {
       this.$emit("file-removed", index);
-    }
-  }
+    },
+  },
 };
 </script>
 

@@ -7,7 +7,12 @@
     @drop="handleFileDrop"
   >
     <p>Drag and drop files to encrypt or decrypt.</p>
-    <input type="file" id="file-input" multiple="True" @change="handleFileInput" />
+    <input
+      type="file"
+      id="file-input"
+      multiple="True"
+      @change="handleFileInput"
+    />
     <label class="button" for="file-input">Select some files</label>
   </div>
 </template>
@@ -32,8 +37,8 @@ export default {
     handleFiles(files) {
       if (!files) return;
       this.$emit("files-added", files);
-    }
-  }
+    },
+  },
 };
 </script>
 

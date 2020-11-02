@@ -6,8 +6,12 @@
       <label for="passphrase">Passphrase:</label>
       <input type="password" id="passphrase" v-model="passphrase" />
     </div>
-    <label class="button" v-if="!fileDecrypted" @click="decryptFile">Decrypt</label>
-    <label class="button" v-if="fileDecrypted" @click="downloadFile">Download</label>
+    <label class="button" v-if="!fileDecrypted" @click="decryptFile">
+      Decrypt
+    </label>
+    <label class="button" v-if="fileDecrypted" @click="downloadFile">
+      Download
+    </label>
   </div>
 </template>
 
@@ -16,11 +20,11 @@ export default {
   name: "DecryptPane",
   props: {
     fileDecrypted: Boolean,
-    needPassphrase: Boolean
+    needPassphrase: Boolean,
   },
   data() {
     return {
-      passphrase: null
+      passphrase: null,
     };
   },
   methods: {
@@ -29,8 +33,8 @@ export default {
     },
     downloadFile() {
       this.$emit("download-file");
-    }
-  }
+    },
+  },
 };
 </script>
 

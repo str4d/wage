@@ -7,6 +7,6 @@
 
 <script>
 export default {
-  name: "EncryptPane"
+  name: "EncryptPane",
 };
 </script>
