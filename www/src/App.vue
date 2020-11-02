@@ -10,6 +10,7 @@
     @drop.prevent
   >
     <h1 id="header">rage encrypt all the things!</h1>
+    <p v-if="errorMsg"><b>Error: {{ errorMsg }}</b></p>
     <FileList
       v-if="encrypting"
       v-bind:files="encryptFiles"
@@ -56,6 +57,7 @@ export default {
   data() {
     return {
       wasm: null,
+      errorMsg: null,
       encryptFiles: [],
       decryptFile: null,
       decryptor: null,
@@ -97,6 +99,7 @@ export default {
   methods: {
     // Reset application to initial state.
     reset() {
+      this.errorMsg = null;
       this.encryptFiles = [];
       this.decryptFile = null;
       this.decryptor = null;
@@ -106,6 +109,8 @@ export default {
     // This function is called by the drop zone, so only if we are starting out,
     // or are already encrypting.
     handleFiles(files) {
+      this.errorMsg = null;
+
       if (this.encrypting) {
         // Add more files to encrypt.
         this.addFilesToEncrypt(files);
@@ -146,11 +151,16 @@ export default {
       // TODO:
       // - Handle if decryptor === null
       // - Disable Decrypt button while decrypting, re-enable on error
-      // - Expose decryption errors in UI (e.g. wrong passphrase)
 
-      decryptor.decrypt_with_passphrase(passphrase).then((stream) => {
-        this.decryptedStream = stream;
-      });
+      decryptor.decrypt_with_passphrase(passphrase).then(
+        (stream) => {
+          this.decryptedStream = stream;
+        },
+        (e) => {
+          this.reset();
+          this.errorMsg = e;
+        }
+      );
     },
     downloadDecryptedFile() {
       // Default filename is the age-encrypted filename without the .age suffix.
