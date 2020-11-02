@@ -32,13 +32,14 @@ impl Decryptor {
         // wasm_streams::readable::ReadableStream.
         let stream = ReadableStream::from_raw(file.stream().dyn_into().unwrap_throw());
 
-        let reader: Box<dyn AsyncRead + Unpin> = Box::new(
-            stream
-                .into_stream()
-                .map_ok(|chunk| Uint8Array::from(chunk).to_vec())
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("JS error: {:?}", e)))
-                .into_async_read(),
-        );
+        let reader: Box<dyn AsyncRead + Unpin> =
+            Box::new(age::armor::ArmoredReader::from_async_reader(
+                stream
+                    .into_stream()
+                    .map_ok(|chunk| Uint8Array::from(chunk).to_vec())
+                    .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("JS error: {:?}", e)))
+                    .into_async_read(),
+            ));
 
         let inner = age::Decryptor::new_async(reader)
             .await
