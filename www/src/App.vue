@@ -86,7 +86,10 @@ export default {
     },
     // Do we need a passphrase from the user?
     needPassphrase() {
-      return this.decryptor !== null && this.decryptor.requires_passphrase();
+      return (
+        this.decryptor !== null &&
+        this.decryptor.requires() == this.wasm.DecryptorType.Passphrase
+      );
     },
     // Have we successfully decrypted the file?
     fileDecrypted() {

@@ -22,6 +22,12 @@ const CHUNK_SIZE: usize = 65536;
 pub struct Decryptor(age::Decryptor<Box<dyn AsyncRead + Unpin>>);
 
 #[wasm_bindgen]
+pub enum DecryptorType {
+    Recipients,
+    Passphrase,
+}
+
+#[wasm_bindgen]
 impl Decryptor {
     /// Attempts to parse the given file as an age-encrypted file, and returns a decryptor.
     pub async fn new(file: web_sys::File) -> Result<Decryptor, JsValue> {
@@ -48,20 +54,16 @@ impl Decryptor {
         Ok(Decryptor(inner))
     }
 
-    /// Returns `true` if the file was encrypted to a list of recipients, and requires
-    /// identities for decryption.
-    pub fn requires_identities(&self) -> bool {
+    /// Returns the type of this decryptor, indicating what is required to decrypt this
+    /// file.
+    ///
+    /// - `DecryptorType::Recipients` if the file was encrypted to a list of recipients,
+    ///   and requires identities for decryption.
+    /// - `DecryptorType::Passphrase` if the file was encrypted to a passphrase.
+    pub fn requires(&self) -> DecryptorType {
         match self.0 {
-            age::Decryptor::Recipients(_) => true,
-            age::Decryptor::Passphrase(_) => false,
-        }
-    }
-
-    /// Returns `true` if the file was encrypted to a passphrase.
-    pub fn requires_passphrase(&self) -> bool {
-        match self.0 {
-            age::Decryptor::Recipients(_) => false,
-            age::Decryptor::Passphrase(_) => true,
+            age::Decryptor::Recipients(_) => DecryptorType::Recipients,
+            age::Decryptor::Passphrase(_) => DecryptorType::Passphrase,
         }
     }
 
