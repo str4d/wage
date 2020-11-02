@@ -10,7 +10,7 @@
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.32",
     "@fortawesome/free-solid-svg-icons": "^5.15.1",
-    "@fortawesome/vue-fontawesome": "^0.1.10",
+    "@fortawesome/vue-fontawesome": "^2.0.0",
     "@types/streamsaver": "^2.0.0",
     "core-js": "^3.6.4",
     "font-awesome-filetypes": "^2.1.0",
