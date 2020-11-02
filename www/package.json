@@ -17,7 +17,7 @@
     "streamsaver": "^2.0.5",
     "vue": "^2.6.12",
     "wage": "file:../pkg",
-    "web-streams-polyfill": "^2.1.1"
+    "web-streams-polyfill": "^3.0.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",
