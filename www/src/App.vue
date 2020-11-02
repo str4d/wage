@@ -10,7 +10,9 @@
     @drop.prevent
   >
     <h1 id="header">rage encrypt all the things!</h1>
-    <p v-if="errorMsg"><b>Error: {{ errorMsg }}</b></p>
+    <p v-if="errorMsg">
+      <b>Error: {{ errorMsg }}</b>
+    </p>
     <FileList
       v-if="encrypting"
       v-bind:files="encryptFiles"
@@ -86,7 +88,10 @@ export default {
     },
     // Do we need a passphrase from the user?
     needPassphrase() {
-      return this.decryptor !== null && this.decryptor.requires_passphrase();
+      return (
+        this.decryptor !== null &&
+        this.decryptor.requires() == this.wasm.DecryptorType.Passphrase
+      );
     },
     // Have we successfully decrypted the file?
     fileDecrypted() {
