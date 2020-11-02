@@ -10,7 +10,9 @@
     @drop.prevent
   >
     <h1 id="header">rage encrypt all the things!</h1>
-    <p v-if="errorMsg"><b>Error: {{ errorMsg }}</b></p>
+    <p v-if="errorMsg">
+      <b>Error: {{ errorMsg }}</b>
+    </p>
     <FileList
       v-if="encrypting"
       v-bind:files="encryptFiles"
