@@ -7,7 +7,7 @@ use secrecy::SecretString;
 use std::io;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use wasm_streams::readable::ReadableStream;
+use wasm_streams::{readable::ReadableStream, writable::WritableStream};
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -16,6 +16,47 @@ use wasm_streams::readable::ReadableStream;
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 const CHUNK_SIZE: usize = 65536;
+
+/// A newtype around an [`age::Encryptor`].
+#[wasm_bindgen]
+pub struct Encryptor(age::Encryptor);
+
+#[wasm_bindgen]
+impl Encryptor {
+    /// Returns an `Encryptor` that will create an age file encrypted with a passphrase.
+    ///
+    /// This API should only be used with a passphrase that was provided by (or generated
+    /// for) a human. For programmatic use cases, instead generate a `SecretKey` and then
+    /// use `Encryptor::with_recipients`.
+    pub fn with_user_passphrase(passphrase: String) -> Encryptor {
+        // This is an entrance from JS to our WASM APIs; perform one-time setup steps.
+        utils::set_panic_hook();
+
+        Encryptor(age::Encryptor::with_user_passphrase(SecretString::new(
+            passphrase,
+        )))
+    }
+
+    /// Creates a wrapper around a writer that will encrypt its input.
+    ///
+    /// Returns errors from the underlying writer while writing the header.
+    pub async fn wrap_output(
+        self,
+        output: wasm_streams::writable::sys::WritableStream,
+    ) -> Result<wasm_streams::writable::sys::WritableStream, JsValue> {
+        // Convert from the opaque web_sys::WritableStream Rust type to the fully-functional
+        // wasm_streams::writable::WritableStream.
+        let sink = WritableStream::from_raw(output).into_sink();
+
+        let writer = self
+            .0
+            .wrap_async_output(shim::SinkWriter::new(sink, CHUNK_SIZE))
+            .await
+            .map_err(|e| JsValue::from(format!("{}", e)))?;
+
+        Ok(WritableStream::from_sink(shim::WriteSinker::new(writer)).into_raw())
+    }
+}
 
 /// A newtype around an [`age::Decryptor`].
 #[wasm_bindgen]
