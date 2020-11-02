@@ -47,6 +47,8 @@
 </template>
 
 <script>
+import { Writer } from "@transcend-io/conflux";
+
 import DecryptPane from "./components/DecryptPane.vue";
 import DropZone from "./components/DropZone.vue";
 import EncryptPane from "./components/EncryptPane.vue";
@@ -148,7 +150,11 @@ export default {
     },
     encryptWithPassphrase(passphrase) {
       // Default filename for a single file is the filename with an .age suffix.
-      const fileName = this.encryptFiles[0].name + ".age";
+      // Default filename for multiple files is a fixed string with a .zip.age suffix.
+      const fileName =
+        this.encryptFiles.length > 1
+          ? "archive.zip.age"
+          : this.encryptFiles[0].name + ".age";
 
       this.wasm.Encryptor.with_user_passphrase(passphrase)
         .wrap_output(window.streamSaver.createWriteStream(fileName))
@@ -156,13 +162,52 @@ export default {
           this.downloadStream = sink;
 
           if (this.encryptFiles.length > 1) {
-            // TODO: Archive and encrypt.
-            this.reset();
-            this.errorMsg = "Encrypting multiple files is not yet supported";
+            this.encryptArchive();
           } else {
             this.encryptSingleFile();
           }
         });
+    },
+    encryptArchive() {
+      const { readable, writable } = new Writer();
+      const zipWriter = writable.getWriter();
+
+      this.encryptFiles.forEach((f) => {
+        const fileStream = f.stream();
+        zipWriter.ready.then(() =>
+          zipWriter.write({
+            name: f.name,
+            lastModified: new Date(0),
+            stream: () => fileStream,
+          })
+        );
+      });
+
+      // Use the more optimized ReadableStream.pipeTo if available.
+      if (window.WritableStream && readable.pipeTo) {
+        return readable
+          .pipeTo(this.downloadStream)
+          .then(zipWriter.ready)
+          .then(zipWriter.close)
+          .then(this.reset);
+      }
+
+      const reader = readable.getReader();
+      const writer = this.downloadStream.getWriter();
+
+      const pump = () =>
+        reader
+          .read()
+          .then((res) =>
+            res.done
+              ? zipWriter.ready
+                  .then(zipWriter.close)
+                  .then(writer.close)
+                  .then(this.reset)
+              : writer.write(res.value).then(pump)
+          );
+
+      pump();
     },
     encryptSingleFile() {
       let fileStream = this.encryptFiles[0].stream();
