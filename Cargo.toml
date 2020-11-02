@@ -14,7 +14,7 @@ default = ["console_error_panic_hook"]
 age = { git = "https://github.com/str4d/rage.git", rev = "3274334a27e9cb3261f890a71f846d1cc75364d5", features = ["async"] }
 futures = "0.3"
 js-sys = "0.3"
-pin-project = "0.4"
+pin-project = "1"
 secrecy = "0.6"
 wasm-bindgen = "0.2.63"
 wasm-bindgen-futures = "0.4"
