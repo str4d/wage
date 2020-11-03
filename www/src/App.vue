@@ -174,13 +174,20 @@ export default {
 
       this.encryptFiles.forEach((f) => {
         const fileStream = f.stream();
-        zipWriter.ready.then(() =>
-          zipWriter.write({
-            name: f.name,
-            lastModified: new Date(0),
-            stream: () => fileStream,
+        zipWriter.ready
+          .then(() => {
+            return zipWriter.write({
+              name: f.name,
+              lastModified: new Date(0),
+              stream: () => fileStream,
+            });
           })
-        );
+          .then(() => {
+            console.log("File written to archive.");
+          })
+          .catch((err) => {
+            console.log("File error:", err);
+          });
       });
 
       // Use the more optimized ReadableStream.pipeTo if available.
@@ -189,7 +196,10 @@ export default {
           .pipeTo(this.downloadStream)
           .then(zipWriter.ready)
           .then(zipWriter.close)
-          .then(this.reset);
+          .then(this.reset)
+          .catch((err) => {
+            console.log("Stream error from pipeTo:", err);
+          });
       }
 
       const reader = readable.getReader();
@@ -204,8 +214,19 @@ export default {
                   .then(zipWriter.close)
                   .then(writer.close)
                   .then(this.reset)
-              : writer.write(res.value).then(pump)
-          );
+                  .catch((err) => {
+                    console.log("Stream close error:", err);
+                  })
+              : writer
+                  .write(res.value)
+                  .then(pump)
+                  .catch((err) => {
+                    console.log("Stream write error:", err);
+                  })
+          )
+          .catch((err) => {
+            console.log("Stream read error:", err);
+          });
 
       pump();
     },
