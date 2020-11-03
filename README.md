@@ -8,9 +8,10 @@ Currently an **experimental** alpha, with incomplete functionality:
 - [x] Read a JavaScript File as a Rust stream.
 - [ ] Recipient encryption.
 - [ ] Recipient decryption.
-- [ ] Passphrase encryption.
+- [x] Passphrase encryption.
 - [x] Passphrase decryption.
-- [ ] Expose a Rust stream to JavaScript as a user-downloadable file.
+- [ ] Multi-file archive-and-encrypt.
+- [x] Expose a Rust stream to JavaScript as a user-downloadable file.
 
 ## Development
 
