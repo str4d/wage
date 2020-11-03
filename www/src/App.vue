@@ -19,7 +19,11 @@
       v-on:file-removed="removeFileToEncrypt"
     />
     <DropZone v-if="!decrypting" v-on:files-added="handleFiles" />
-    <EncryptPane id="details-pane" v-if="encrypting" />
+    <EncryptPane
+      id="details-pane"
+      v-if="encrypting"
+      v-on:encrypt-with-passphrase="encryptWithPassphrase"
+    />
     <DecryptPane
       id="details-pane"
       v-if="decrypting"
@@ -141,6 +145,46 @@ export default {
     },
     removeFileToEncrypt(index) {
       this.encryptFiles.splice(index, 1);
+    },
+    encryptWithPassphrase(passphrase) {
+      // Default filename for a single file is the filename with an .age suffix.
+      const fileName = this.encryptFiles[0].name + ".age";
+
+      this.wasm.Encryptor.with_user_passphrase(passphrase)
+        .wrap_output(window.streamSaver.createWriteStream(fileName))
+        .then((sink) => {
+          this.downloadStream = sink;
+
+          if (this.encryptFiles.length > 1) {
+            // TODO: Archive and encrypt.
+            this.reset();
+            this.errorMsg = "Encrypting multiple files is not yet supported";
+          } else {
+            this.encryptSingleFile();
+          }
+        });
+    },
+    encryptSingleFile() {
+      let fileStream = this.encryptFiles[0].stream();
+
+      // Use the more optimized ReadableStream.pipeTo if available.
+      if (window.WritableStream && fileStream.pipeTo) {
+        return fileStream.pipeTo(this.downloadStream).then(this.reset);
+      }
+
+      const reader = fileStream.getReader();
+      const writer = this.downloadStream.getWriter();
+
+      const pump = () =>
+        reader
+          .read()
+          .then((res) =>
+            res.done
+              ? writer.close().then(this.reset)
+              : writer.write(res.value).then(pump)
+          );
+
+      pump();
     },
     // Decryption methods
     startDecrypt(file) {
