@@ -31,6 +31,7 @@ impl Encryptor {
     pub fn with_user_passphrase(passphrase: String) -> Encryptor {
         // This is an entrance from JS to our WASM APIs; perform one-time setup steps.
         utils::set_panic_hook();
+        utils::select_language();
 
         Encryptor(age::Encryptor::with_user_passphrase(SecretString::new(
             passphrase,
@@ -74,6 +75,7 @@ impl Decryptor {
     pub async fn new(file: web_sys::File) -> Result<Decryptor, JsValue> {
         // This is an entrance from JS to our WASM APIs; perform one-time setup steps.
         utils::set_panic_hook();
+        utils::select_language();
 
         // Convert from the opaque web_sys::ReadableStream Rust type to the fully-functional
         // wasm_streams::readable::ReadableStream.
