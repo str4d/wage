@@ -1,37 +1,34 @@
 <template>
-  <div
-    id="app"
-    v-bind:class="{
-      'one-column-drop-zone': !(encrypting || decrypting),
-      'two-column': encrypting,
-      'one-column-decrypting': decrypting,
-    }"
-    @dragover.prevent
-    @drop.prevent
-  >
-    <h1 id="header">rage encrypt all the things!</h1>
+  <div id="app" @dragover.prevent @drop.prevent>
+    <h1 class="title">rage encrypt all the things!</h1>
     <p v-if="errorMsg">
       <b>Error: {{ errorMsg }}</b>
     </p>
-    <FileList
-      v-if="encrypting"
-      v-bind:files="encryptFiles"
-      v-on:file-removed="removeFileToEncrypt"
-    />
-    <DropZone v-if="!decrypting" v-on:files-added="handleFiles" />
-    <EncryptPane
-      id="details-pane"
-      v-if="encrypting"
-      v-on:encrypt-with-passphrase="encryptWithPassphrase"
-    />
-    <DecryptPane
-      id="details-pane"
-      v-if="decrypting"
-      v-bind:fileDecrypted="fileDecrypted"
-      v-bind:needPassphrase="needPassphrase"
-      v-on:decrypt-with-passphrase="decryptWithPassphrase"
-      v-on:download-file="downloadDecryptedFile"
-    />
+    <div class="columns">
+      <div class="column" v-if="!decrypting">
+        <FileList
+          v-if="encrypting"
+          v-bind:files="encryptFiles"
+          v-on:file-removed="removeFileToEncrypt"
+        />
+        <DropZone v-if="!decrypting" v-on:files-added="handleFiles" />
+      </div>
+      <EncryptPane
+        class="column"
+        id="details-pane"
+        v-if="encrypting"
+        v-on:encrypt-with-passphrase="encryptWithPassphrase"
+      />
+      <DecryptPane
+        class="column"
+        id="details-pane"
+        v-if="decrypting"
+        v-bind:fileDecrypted="fileDecrypted"
+        v-bind:needPassphrase="needPassphrase"
+        v-on:decrypt-with-passphrase="decryptWithPassphrase"
+        v-on:download-file="downloadDecryptedFile"
+      />
+    </div>
     <div id="footer">
       <p>
         This is an
@@ -278,37 +275,5 @@ export default {
 }
 .button:hover {
   background: #ddd;
-}
-#header {
-  grid-area: header;
-}
-#file-list {
-  grid-area: file-list;
-}
-#drop-zone {
-  grid-area: drop-zone;
-}
-#details-pane {
-  grid-area: details-pane;
-}
-#footer {
-  grid-area: footer;
-}
-.one-column-drop-zone {
-  grid-template-columns: 10fr;
-  grid-template-areas: "header" "drop-zone" "footer";
-}
-.one-column-drop-zone .drop-zone {
-  height: 100%;
-}
-.two-column {
-  grid-gap: 20px;
-  grid-template-columns: 5fr 5fr;
-  grid-template-rows: 1fr 3fr 2fr;
-  grid-template-areas: "header header" "file-list details-pane" "drop-zone details-pane" "footer footer";
-}
-.one-column-decrypting {
-  grid-template-columns: 10fr;
-  grid-template-areas: "header" "details-pane" "footer";
 }
 </style>
