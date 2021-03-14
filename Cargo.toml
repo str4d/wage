@@ -11,10 +11,10 @@ crate-type = ["cdylib", "rlib"]
 default = ["console_error_panic_hook"]
 
 [dependencies]
-age = { git = "https://github.com/str4d/rage.git", rev = "cb37391b81f2b69e75edde7bb04b14974a10e339", features = ["armor", "async"] }
+age = { version = "0.5.1", features = ["armor", "async"] }
 futures = "0.3"
 getrandom = { version = "0.1", features = ["wasm-bindgen"] }
-i18n-embed = { version = "0.9", features = ["fluent-system", "web-sys-requester"] }
+i18n-embed = { version = "0.10.2", features = ["fluent-system", "web-sys-requester"] }
 js-sys = "0.3"
 pin-project = "1"
 secrecy = "0.7"
