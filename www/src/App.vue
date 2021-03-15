@@ -10,7 +10,7 @@
         v-on:file-removed="removeFileToEncrypt"
       />
       <div class="column is-half" v-if="encrypting || decrypting">
-        <FileInfo v-bind:fileIcon="fileIcon" />
+        <FileInfo v-bind:fileIcon="fileIcon" v-on:reset-app="reset" />
         <EncryptPane
           id="details-pane"
           v-if="encrypting"
