@@ -5,14 +5,13 @@
       <b>Error: {{ errorMsg }}</b>
     </p>
     <div class="columns">
-      <div class="column" v-if="!decrypting">
-        <FileList
-          v-if="encrypting"
-          v-bind:files="encryptFiles"
-          v-on:file-removed="removeFileToEncrypt"
-        />
-        <DropZone v-if="!decrypting" v-on:files-added="handleFiles" />
-      </div>
+      <DropZone
+        class="column"
+        v-if="!decrypting"
+        v-bind:dropFiles="dropFiles"
+        v-on:files-changed="handleFiles"
+        v-on:file-removed="removeFileToEncrypt"
+      />
       <EncryptPane
         class="column"
         id="details-pane"
@@ -47,7 +46,6 @@
 import DecryptPane from "./components/DecryptPane.vue";
 import DropZone from "./components/DropZone.vue";
 import EncryptPane from "./components/EncryptPane.vue";
-import FileList from "./components/FileList.vue";
 
 export default {
   name: "App",
@@ -55,13 +53,13 @@ export default {
     DecryptPane,
     DropZone,
     EncryptPane,
-    FileList,
   },
   data() {
     return {
       wasm: null,
       errorMsg: null,
-      encryptFiles: [],
+      dropFiles: [],
+      encryptMode: false,
       decryptFile: null,
       decryptor: null,
       decryptedStream: null,
@@ -81,7 +79,7 @@ export default {
   computed: {
     // Are we in "encrypting" mode?
     encrypting() {
-      return this.encryptFiles.length;
+      return this.encryptMode && !this.decrypting;
     },
     // Are we in "decrypting" mode?
     decrypting() {
@@ -106,7 +104,8 @@ export default {
     // Reset application to initial state.
     reset() {
       this.errorMsg = null;
-      this.encryptFiles = [];
+      this.dropFiles = [];
+      this.encryptMode = false;
       this.decryptFile = null;
       this.decryptor = null;
       this.decryptedStream = null;
@@ -114,45 +113,39 @@ export default {
     },
     // This function is called by the drop zone, so only if we are starting out,
     // or are already encrypting.
-    handleFiles(files) {
+    handleFiles() {
       this.errorMsg = null;
 
-      if (this.encrypting) {
-        // Add more files to encrypt.
-        this.addFilesToEncrypt(files);
-      } else {
+      if (!this.encrypting) {
         // Search for a decryptable file.
-        var decryptIndex = [...files].findIndex((f) => {
+        var decryptIndex = [...this.dropFiles].findIndex((f) => {
           return f.name.endsWith(".age");
         });
 
         // Decide whether we are encrypting or decrypting.
         if (decryptIndex == -1) {
-          this.addFilesToEncrypt(files);
+          this.encryptMode = true;
         } else {
-          this.startDecrypt(files[decryptIndex]);
+          this.startDecrypt(this.dropFiles[decryptIndex]);
         }
       }
     },
     // Encryption methods
-    addFilesToEncrypt(files) {
-      [...files].forEach((f) => {
-        this.encryptFiles.push(f);
-      });
-    },
-    removeFileToEncrypt(index) {
-      this.encryptFiles.splice(index, 1);
+    removeFileToEncrypt() {
+      if (!this.dropFiles.length) {
+        this.reset();
+      }
     },
     encryptWithPassphrase(passphrase) {
       // Default filename for a single file is the filename with an .age suffix.
-      const fileName = this.encryptFiles[0].name + ".age";
+      const fileName = this.dropFiles[0].name + ".age";
 
       this.wasm.Encryptor.with_user_passphrase(passphrase)
         .wrap_output(window.streamSaver.createWriteStream(fileName))
         .then((sink) => {
           this.downloadStream = sink;
 
-          if (this.encryptFiles.length > 1) {
+          if (this.dropFiles.length > 1) {
             // TODO: Archive and encrypt.
             this.reset();
             this.errorMsg = "Encrypting multiple files is not yet supported";
@@ -162,7 +155,7 @@ export default {
         });
     },
     encryptSingleFile() {
-      let fileStream = this.encryptFiles[0].stream();
+      let fileStream = this.dropFiles[0].stream();
 
       // Use the more optimized ReadableStream.pipeTo if available.
       if (window.WritableStream && fileStream.pipeTo) {
