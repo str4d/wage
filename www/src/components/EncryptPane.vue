@@ -2,11 +2,10 @@
   <div>
     <font-awesome-icon icon="file" size="10x" />
     <p>TODO: encryption pane.</p>
-    <div id="passphrase-section">
-      <label for="passphrase">Passphrase:</label>
-      <input type="password" id="passphrase" v-model="passphrase" />
-    </div>
-    <label class="button" @click="encryptFile">Encrypt with passphrase</label>
+    <b-field label="Passphrase">
+      <b-input v-model="passphrase" type="password" password-reveal> </b-input>
+    </b-field>
+    <b-button @click="encryptFile">Encrypt</b-button>
   </div>
 </template>
 
@@ -25,12 +24,3 @@ export default {
   },
 };
 </script>
-
-<style scoped>
-#passphrase-section {
-  margin-bottom: 10px;
-}
-#passphrase {
-  margin-left: 10px;
-}
-</style>

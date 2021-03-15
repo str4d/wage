@@ -1,61 +1,47 @@
 <template>
-  <div
-    id="drop-zone"
-    @dragenter="highlight"
-    @dragover="highlight"
-    @dragleave="unhighlight"
-    @drop="handleFileDrop"
-  >
-    <p>Drag and drop files to encrypt or decrypt.</p>
-    <input
-      type="file"
-      id="file-input"
-      multiple="True"
-      @change="handleFileInput"
-    />
-    <label class="button" for="file-input">Select some files</label>
-  </div>
+  <section>
+    <b-field>
+      <b-upload v-model="dropFiles" multiple drag-drop @input=filesChanged>
+        <section class="section">
+          <div class="content has-text-centered">
+            <p>
+              <b-icon icon="upload" size="is-large"> </b-icon>
+            </p>
+            <p>Drop files to encrypt or decrypt here, or click to upload</p>
+          </div>
+        </section>
+      </b-upload>
+    </b-field>
+
+    <div class="tags">
+      <span
+        v-for="(file, index) in dropFiles"
+        :key="index"
+        class="tag is-primary"
+      >
+        {{ file.name }}
+        <button
+          class="delete is-small"
+          type="button"
+          @click="deleteDropFile(index)"
+        ></button>
+      </span>
+    </div>
+  </section>
 </template>
 
 <script>
 export default {
   name: "DropZone",
+  props: ["dropFiles"],
   methods: {
-    highlight() {
-      this.$el.classList.add("highlight");
+    filesChanged() {
+      this.$emit("files-changed");
     },
-    unhighlight() {
-      this.$el.classList.remove("highlight");
-    },
-    handleFileDrop(e) {
-      this.unhighlight();
-      this.handleFiles(e.dataTransfer.files);
-    },
-    handleFileInput(e) {
-      this.handleFiles(e.target.files);
-    },
-    handleFiles(files) {
-      if (!files) return;
-      this.$emit("files-added", files);
+    deleteDropFile(index) {
+      this.dropFiles.splice(index, 1);
+      this.$emit("file-removed");
     },
   },
 };
 </script>
-
-<style scoped>
-#drop-zone {
-  border: 2px dashed #ccc;
-  border-radius: 20px;
-  font-family: sans-serif;
-  padding: 20px;
-}
-#drop-zone.highlight {
-  border-color: purple;
-}
-p {
-  margin-top: 0;
-}
-#file-input {
-  display: none;
-}
-</style>
