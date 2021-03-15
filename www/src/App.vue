@@ -1,9 +1,6 @@
 <template>
   <div id="app" @dragover.prevent @drop.prevent>
     <h1 class="title">rage encrypt all the things!</h1>
-    <p v-if="errorMsg">
-      <b>Error: {{ errorMsg }}</b>
-    </p>
     <div class="columns">
       <DropZone
         class="column"
@@ -57,7 +54,6 @@ export default {
   data() {
     return {
       wasm: null,
-      errorMsg: null,
       dropFiles: [],
       encryptMode: false,
       decryptFile: null,
@@ -103,7 +99,6 @@ export default {
   methods: {
     // Reset application to initial state.
     reset() {
-      this.errorMsg = null;
       this.dropFiles = [];
       this.encryptMode = false;
       this.decryptFile = null;
@@ -111,11 +106,19 @@ export default {
       this.decryptedStream = null;
       this.downloadStream = null;
     },
+    // Status messages.
+    showError(e) {
+      console.error(e);
+      this.$buefy.toast.open({
+        duration: 5000,
+        message: e,
+        position: "is-bottom",
+        type: "is-danger",
+      });
+    },
     // This function is called by the drop zone, so only if we are starting out,
     // or are already encrypting.
     handleFiles() {
-      this.errorMsg = null;
-
       if (!this.encrypting) {
         // Search for a decryptable file.
         var decryptIndex = [...this.dropFiles].findIndex((f) => {
@@ -140,7 +143,7 @@ export default {
       if (this.dropFiles.length > 1) {
         // TODO: Archive and encrypt.
         this.reset();
-        this.errorMsg = "Encrypting multiple files is not yet supported";
+        this.showError("Encrypting multiple files is not yet supported");
       } else {
         // Default filename for a single file is the filename with an .age suffix.
         const fileName = this.dropFiles[0].name + ".age";
@@ -200,7 +203,7 @@ export default {
         },
         (e) => {
           this.reset();
-          this.errorMsg = e;
+          this.showError(e);
         }
       );
     },
