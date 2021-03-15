@@ -26,7 +26,7 @@
         />
       </div>
     </div>
-    <div id="footer">
+    <footer class="footer">
       <p>
         This is an
         <strong>EXPERIMENTAL</strong> alpha version; <strong>DO NOT</strong> use
@@ -36,7 +36,7 @@
         <a href="https://str4d.xyz/wage">Source available here!</a> Powered by
         <a href="https://str4d.xyz/rage">rage</a>.
       </p>
-    </div>
+    </footer>
   </div>
 </template>
 
