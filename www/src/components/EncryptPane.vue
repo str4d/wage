@@ -1,6 +1,6 @@
 <template>
   <div>
-    <font-awesome-icon icon="file" size="10x" />
+    <font-awesome-icon :icon="fileIcon" size="10x" />
     <p>TODO: encryption pane.</p>
     <b-field label="Passphrase">
       <b-input v-model="passphrase" type="password" password-reveal> </b-input>
@@ -12,6 +12,7 @@
 <script>
 export default {
   name: "EncryptPane",
+  props: ["fileIcon"],
   data() {
     return {
       passphrase: null,

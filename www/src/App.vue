@@ -13,12 +13,14 @@
         class="column"
         id="details-pane"
         v-if="encrypting"
+        v-bind:fileIcon="fileIcon"
         v-on:encrypt-with-passphrase="encryptWithPassphrase"
       />
       <DecryptPane
         class="column"
         id="details-pane"
         v-if="decrypting"
+        v-bind:fileIcon="fileIcon"
         v-bind:fileDecrypted="fileDecrypted"
         v-bind:needPassphrase="needPassphrase"
         v-on:decrypt-with-passphrase="decryptWithPassphrase"
@@ -43,6 +45,10 @@
 import DecryptPane from "./components/DecryptPane.vue";
 import DropZone from "./components/DropZone.vue";
 import EncryptPane from "./components/EncryptPane.vue";
+import {
+  getClassNameForFilename,
+  getClassNameForMimeType,
+} from "font-awesome-filetypes";
 
 export default {
   name: "App",
@@ -81,6 +87,22 @@ export default {
     decrypting() {
       return this.decryptFile !== null;
     },
+    // Icon matching the file we are encrypting or decrypting.
+    fileIcon() {
+      if (this.encrypting) {
+        return (this.dropFiles.length > 1
+          ? this.getClassNameForFilename("archive.zip")
+          : this.getClassNameForMimeType(this.dropFiles[0].type)
+        ).substring(3);
+      } else if (this.decrypting) {
+        // Default filename is the age-encrypted filename without the .age suffix.
+        return this.getClassNameForFilename(
+          this.decryptFile.name.slice(0, -4)
+        ).substring(3);
+      } else {
+        return "file";
+      }
+    },
     // Do we need a passphrase from the user?
     needPassphrase() {
       return (
@@ -97,6 +119,8 @@ export default {
     },
   },
   methods: {
+    getClassNameForFilename,
+    getClassNameForMimeType,
     // Reset application to initial state.
     reset() {
       this.dropFiles = [];
