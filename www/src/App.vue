@@ -136,23 +136,26 @@ export default {
         this.reset();
       }
     },
+    prepareEncryptStream(callback) {
+      if (this.dropFiles.length > 1) {
+        // TODO: Archive and encrypt.
+        this.reset();
+        this.errorMsg = "Encrypting multiple files is not yet supported";
+      } else {
+        // Default filename for a single file is the filename with an .age suffix.
+        const fileName = this.dropFiles[0].name + ".age";
+        callback(window.streamSaver.createWriteStream(fileName));
+      }
+    },
     encryptWithPassphrase(passphrase) {
-      // Default filename for a single file is the filename with an .age suffix.
-      const fileName = this.dropFiles[0].name + ".age";
-
-      this.wasm.Encryptor.with_user_passphrase(passphrase)
-        .wrap_output(window.streamSaver.createWriteStream(fileName))
-        .then((sink) => {
-          this.downloadStream = sink;
-
-          if (this.dropFiles.length > 1) {
-            // TODO: Archive and encrypt.
-            this.reset();
-            this.errorMsg = "Encrypting multiple files is not yet supported";
-          } else {
+      this.prepareEncryptStream((outputStream) => {
+        this.wasm.Encryptor.with_user_passphrase(passphrase)
+          .wrap_output(outputStream)
+          .then((sink) => {
+            this.downloadStream = sink;
             this.encryptSingleFile();
-          }
-        });
+          });
+      });
     },
     encryptSingleFile() {
       let fileStream = this.dropFiles[0].stream();
