@@ -1,20 +1,17 @@
 <template>
-  <div>
-    <font-awesome-icon :icon="fileIcon" size="10x" />
-    <p>TODO: decryption pane.</p>
+  <section class="box">
     <b-field label="Passphrase" v-if="!fileDecrypted && needPassphrase">
       <b-input type="password" v-model="passphrase" password-reveal> </b-input>
     </b-field>
     <b-button v-if="!fileDecrypted" @click="decryptFile">Decrypt</b-button>
     <b-button v-if="fileDecrypted" @click="downloadFile">Download</b-button>
-  </div>
+  </section>
 </template>
 
 <script>
 export default {
   name: "DecryptPane",
   props: {
-    fileIcon: String,
     fileDecrypted: Boolean,
     needPassphrase: Boolean,
   },

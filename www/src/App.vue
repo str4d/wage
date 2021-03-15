@@ -1,7 +1,7 @@
 <template>
   <div id="app" @dragover.prevent @drop.prevent>
     <h1 class="title">rage encrypt all the things!</h1>
-    <div class="columns">
+    <div class="columns is-centered">
       <DropZone
         class="column"
         v-if="!decrypting"
@@ -9,23 +9,22 @@
         v-on:files-changed="handleFiles"
         v-on:file-removed="removeFileToEncrypt"
       />
-      <EncryptPane
-        class="column"
-        id="details-pane"
-        v-if="encrypting"
-        v-bind:fileIcon="fileIcon"
-        v-on:encrypt-with-passphrase="encryptWithPassphrase"
-      />
-      <DecryptPane
-        class="column"
-        id="details-pane"
-        v-if="decrypting"
-        v-bind:fileIcon="fileIcon"
-        v-bind:fileDecrypted="fileDecrypted"
-        v-bind:needPassphrase="needPassphrase"
-        v-on:decrypt-with-passphrase="decryptWithPassphrase"
-        v-on:download-file="downloadDecryptedFile"
-      />
+      <div class="column is-half" v-if="encrypting || decrypting">
+        <FileInfo v-bind:fileIcon="fileIcon" />
+        <EncryptPane
+          id="details-pane"
+          v-if="encrypting"
+          v-on:encrypt-with-passphrase="encryptWithPassphrase"
+        />
+        <DecryptPane
+          id="details-pane"
+          v-if="decrypting"
+          v-bind:fileDecrypted="fileDecrypted"
+          v-bind:needPassphrase="needPassphrase"
+          v-on:decrypt-with-passphrase="decryptWithPassphrase"
+          v-on:download-file="downloadDecryptedFile"
+        />
+      </div>
     </div>
     <div id="footer">
       <p>
@@ -45,6 +44,7 @@
 import DecryptPane from "./components/DecryptPane.vue";
 import DropZone from "./components/DropZone.vue";
 import EncryptPane from "./components/EncryptPane.vue";
+import FileInfo from "./components/FileInfo.vue";
 import {
   getClassNameForFilename,
   getClassNameForMimeType,
@@ -56,6 +56,7 @@ export default {
     DecryptPane,
     DropZone,
     EncryptPane,
+    FileInfo,
   },
   data() {
     return {
