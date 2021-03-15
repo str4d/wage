@@ -1,6 +1,11 @@
 <template>
   <div id="app" @dragover.prevent @drop.prevent>
-    <h1 class="title">rage encrypt all the things!</h1>
+    <h1 class="title">
+      rage
+      <span v-if="!decrypting">encrypt</span>
+      <span v-if="decrypting">decrypt</span>
+      all the things!
+    </h1>
     <div class="columns is-centered">
       <DropZone
         class="column"
@@ -10,7 +15,17 @@
         v-on:file-removed="removeFileToEncrypt"
       />
       <div class="column is-half" v-if="encrypting || decrypting">
-        <FileInfo v-bind:fileIcon="fileIcon" v-on:reset-app="reset" />
+        <FileInfo v-bind:fileIcon="fileIcon" v-on:reset-app="reset">
+          <div v-if="encrypting">TODO: Encryption info.</div>
+          <div v-if="decrypting">
+            <dl>
+              <dt>Name</dt>
+              <dd>{{ this.decryptFile.name }}</dd>
+              <dt>Encrypted size</dt>
+              <dd>{{ this.decryptFile.size }} bytes</dd>
+            </dl>
+          </div>
+        </FileInfo>
         <EncryptPane
           id="details-pane"
           v-if="encrypting"
@@ -299,5 +314,8 @@ export default {
 }
 .button:hover {
   background: #ddd;
+}
+dt {
+  font-weight: bold;
 }
 </style>

@@ -5,7 +5,7 @@
     </div>
     <div id="file-info" class="column">
       <button id="reset-app" class="delete is-large" @click="resetApp()" />
-      <p>TODO: file info.</p>
+      <slot></slot>
     </div>
   </section>
 </template>
