@@ -1,10 +1,12 @@
 <template>
   <div id="app" @dragover.prevent @drop.prevent>
-    <h1 class="title">rage encrypt all the things!</h1>
-    <p v-if="errorMsg">
-      <b>Error: {{ errorMsg }}</b>
-    </p>
-    <div class="columns">
+    <h1 class="title">
+      rage
+      <span v-if="!decrypting">encrypt</span>
+      <span v-if="decrypting">decrypt</span>
+      all the things!
+    </h1>
+    <div class="columns is-centered">
       <DropZone
         class="column"
         v-if="!decrypting"
@@ -12,23 +14,34 @@
         v-on:files-changed="handleFiles"
         v-on:file-removed="removeFileToEncrypt"
       />
-      <EncryptPane
-        class="column"
-        id="details-pane"
-        v-if="encrypting"
-        v-on:encrypt-with-passphrase="encryptWithPassphrase"
-      />
-      <DecryptPane
-        class="column"
-        id="details-pane"
-        v-if="decrypting"
-        v-bind:fileDecrypted="fileDecrypted"
-        v-bind:needPassphrase="needPassphrase"
-        v-on:decrypt-with-passphrase="decryptWithPassphrase"
-        v-on:download-file="downloadDecryptedFile"
-      />
+      <div class="column is-half" v-if="encrypting || decrypting">
+        <FileInfo v-bind:fileIcon="fileIcon" v-on:reset-app="reset">
+          <div v-if="encrypting">TODO: Encryption info.</div>
+          <div v-if="decrypting">
+            <dl>
+              <dt>Name</dt>
+              <dd>{{ this.decryptFile.name }}</dd>
+              <dt>Encrypted size</dt>
+              <dd>{{ this.decryptFile.size }} bytes</dd>
+            </dl>
+          </div>
+        </FileInfo>
+        <EncryptPane
+          id="details-pane"
+          v-if="encrypting"
+          v-on:encrypt-with-passphrase="encryptWithPassphrase"
+        />
+        <DecryptPane
+          id="details-pane"
+          v-if="decrypting"
+          v-bind:fileDecrypted="fileDecrypted"
+          v-bind:needPassphrase="needPassphrase"
+          v-on:decrypt-with-passphrase="decryptWithPassphrase"
+          v-on:download-file="downloadDecryptedFile"
+        />
+      </div>
     </div>
-    <div id="footer">
+    <footer class="footer">
       <p>
         This is an
         <strong>EXPERIMENTAL</strong> alpha version; <strong>DO NOT</strong> use
@@ -38,7 +51,7 @@
         <a href="https://str4d.xyz/wage">Source available here!</a> Powered by
         <a href="https://str4d.xyz/rage">rage</a>.
       </p>
-    </div>
+    </footer>
   </div>
 </template>
 
@@ -46,6 +59,11 @@
 import DecryptPane from "./components/DecryptPane.vue";
 import DropZone from "./components/DropZone.vue";
 import EncryptPane from "./components/EncryptPane.vue";
+import FileInfo from "./components/FileInfo.vue";
+import {
+  getClassNameForFilename,
+  getClassNameForMimeType,
+} from "font-awesome-filetypes";
 
 export default {
   name: "App",
@@ -53,11 +71,11 @@ export default {
     DecryptPane,
     DropZone,
     EncryptPane,
+    FileInfo,
   },
   data() {
     return {
       wasm: null,
-      errorMsg: null,
       dropFiles: [],
       encryptMode: false,
       decryptFile: null,
@@ -85,6 +103,22 @@ export default {
     decrypting() {
       return this.decryptFile !== null;
     },
+    // Icon matching the file we are encrypting or decrypting.
+    fileIcon() {
+      if (this.encrypting) {
+        return (this.dropFiles.length > 1
+          ? this.getClassNameForFilename("archive.zip")
+          : this.getClassNameForMimeType(this.dropFiles[0].type)
+        ).substring(3);
+      } else if (this.decrypting) {
+        // Default filename is the age-encrypted filename without the .age suffix.
+        return this.getClassNameForFilename(
+          this.decryptFile.name.slice(0, -4)
+        ).substring(3);
+      } else {
+        return "file";
+      }
+    },
     // Do we need a passphrase from the user?
     needPassphrase() {
       return (
@@ -101,9 +135,10 @@ export default {
     },
   },
   methods: {
+    getClassNameForFilename,
+    getClassNameForMimeType,
     // Reset application to initial state.
     reset() {
-      this.errorMsg = null;
       this.dropFiles = [];
       this.encryptMode = false;
       this.decryptFile = null;
@@ -111,11 +146,19 @@ export default {
       this.decryptedStream = null;
       this.downloadStream = null;
     },
+    // Status messages.
+    showError(e) {
+      console.error(e);
+      this.$buefy.toast.open({
+        duration: 5000,
+        message: e,
+        position: "is-bottom",
+        type: "is-danger",
+      });
+    },
     // This function is called by the drop zone, so only if we are starting out,
     // or are already encrypting.
     handleFiles() {
-      this.errorMsg = null;
-
       if (!this.encrypting) {
         // Search for a decryptable file.
         var decryptIndex = [...this.dropFiles].findIndex((f) => {
@@ -136,23 +179,26 @@ export default {
         this.reset();
       }
     },
+    prepareEncryptStream(callback) {
+      if (this.dropFiles.length > 1) {
+        // TODO: Archive and encrypt.
+        this.reset();
+        this.showError("Encrypting multiple files is not yet supported");
+      } else {
+        // Default filename for a single file is the filename with an .age suffix.
+        const fileName = this.dropFiles[0].name + ".age";
+        callback(window.streamSaver.createWriteStream(fileName));
+      }
+    },
     encryptWithPassphrase(passphrase) {
-      // Default filename for a single file is the filename with an .age suffix.
-      const fileName = this.dropFiles[0].name + ".age";
-
-      this.wasm.Encryptor.with_user_passphrase(passphrase)
-        .wrap_output(window.streamSaver.createWriteStream(fileName))
-        .then((sink) => {
-          this.downloadStream = sink;
-
-          if (this.dropFiles.length > 1) {
-            // TODO: Archive and encrypt.
-            this.reset();
-            this.errorMsg = "Encrypting multiple files is not yet supported";
-          } else {
+      this.prepareEncryptStream((outputStream) => {
+        this.wasm.Encryptor.with_user_passphrase(passphrase)
+          .wrap_output(outputStream)
+          .then((sink) => {
+            this.downloadStream = sink;
             this.encryptSingleFile();
-          }
-        });
+          });
+      });
     },
     encryptSingleFile() {
       let fileStream = this.dropFiles[0].stream();
@@ -197,7 +243,7 @@ export default {
         },
         (e) => {
           this.reset();
-          this.errorMsg = e;
+          this.showError(e);
         }
       );
     },
@@ -268,5 +314,8 @@ export default {
 }
 .button:hover {
   background: #ddd;
+}
+dt {
+  font-weight: bold;
 }
 </style>
