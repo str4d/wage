@@ -41,6 +41,7 @@ parking_lot_core = "=0.8.0"
 [dependencies.web-sys]
 version = "0.3"
 features = [
+    "Blob",
     "File",
     "ReadableStream",
     "console",

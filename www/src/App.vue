@@ -29,6 +29,8 @@
         <EncryptPane
           id="details-pane"
           v-if="encrypting"
+          v-bind:wasm="wasm"
+          v-on:encrypt-to-recipients="encryptToRecipients"
           v-on:encrypt-with-passphrase="encryptWithPassphrase"
         />
         <DecryptPane
@@ -189,6 +191,17 @@ export default {
         const fileName = this.dropFiles[0].name + ".age";
         callback(window.streamSaver.createWriteStream(fileName));
       }
+    },
+    encryptToRecipients(recipients) {
+      this.prepareEncryptStream((outputStream) => {
+        recipients
+          .into_encryptor()
+          .wrap_output(outputStream)
+          .then((sink) => {
+            this.downloadStream = sink;
+            this.encryptSingleFile();
+          });
+      });
     },
     encryptWithPassphrase(passphrase) {
       this.prepareEncryptStream((outputStream) => {

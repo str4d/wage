@@ -9,6 +9,10 @@ window.streamSaver = streamSaver;
 
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
+  faArrowUp,
+  faExclamationCircle,
+  faEye,
+  faEyeSlash,
   faFile,
   faFileAlt,
   faFileArchive,
@@ -21,8 +25,13 @@ import {
   faFilePowerpoint,
   faFileVideo,
   faFileWord,
+  faTrash,
   faUpload,
 } from "@fortawesome/free-solid-svg-icons";
+library.add(faArrowUp);
+library.add(faExclamationCircle);
+library.add(faEye);
+library.add(faEyeSlash);
 library.add(faFile);
 library.add(faFileAlt);
 library.add(faFileArchive);
@@ -35,6 +44,7 @@ library.add(faFilePdf);
 library.add(faFilePowerpoint);
 library.add(faFileVideo);
 library.add(faFileWord);
+library.add(faTrash);
 library.add(faUpload);
 
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
