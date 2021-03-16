@@ -15,7 +15,11 @@
         v-on:file-removed="removeFileToEncrypt"
       />
       <div class="column is-half" v-if="encrypting || decrypting">
-        <FileInfo v-bind:fileIcon="fileIcon" v-on:reset-app="reset">
+        <FileInfo
+          v-bind:fileIcon="fileIcon"
+          v-bind:iconSize="fileIconSize"
+          v-on:reset-app="reset"
+        >
           <div v-if="encrypting">TODO: Encryption info.</div>
           <div v-if="decrypting">
             <dl>
@@ -119,6 +123,13 @@ export default {
         ).substring(3);
       } else {
         return "file";
+      }
+    },
+    fileIconSize() {
+      if (this.encrypting) {
+        return "4x";
+      } else {
+        return "10x";
       }
     },
     // Do we need a passphrase from the user?
