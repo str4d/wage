@@ -41,6 +41,7 @@
           id="details-pane"
           v-if="decrypting"
           v-bind:fileDecrypted="fileDecrypted"
+          v-bind:needIdentities="needIdentities"
           v-bind:needPassphrase="needPassphrase"
           v-on:decrypt-with-passphrase="decryptWithPassphrase"
           v-on:download-file="downloadDecryptedFile"
@@ -132,7 +133,13 @@ export default {
         return "10x";
       }
     },
-    // Do we need a passphrase from the user?
+    // What do we need from the user?
+    needIdentities() {
+      return (
+        this.decryptor !== null &&
+        this.decryptor.requires() == this.wasm.DecryptorType.Recipients
+      );
+    },
     needPassphrase() {
       return (
         this.decryptor !== null &&

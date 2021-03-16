@@ -1,5 +1,9 @@
 <template>
   <section class="box">
+    <div v-if="needIdentities">
+      <p>Requires identities to decrypt, which are not supported yet.</p>
+      <p>Check back soon!</p>
+    </div>
     <b-field label="Passphrase" v-if="!fileDecrypted && needPassphrase">
       <b-input type="password" v-model="passphrase" password-reveal> </b-input>
     </b-field>
@@ -13,6 +17,7 @@ export default {
   name: "DecryptPane",
   props: {
     fileDecrypted: Boolean,
+    needIdentities: Boolean,
     needPassphrase: Boolean,
   },
   data() {
@@ -22,7 +27,11 @@ export default {
   },
   methods: {
     decryptFile() {
-      this.$emit("decrypt-with-passphrase", this.passphrase);
+      if (this.needIdentities) {
+        console.log("TODO: Decrypt with identities");
+      } else if (this.needPassphrase) {
+        this.$emit("decrypt-with-passphrase", this.passphrase);
+      }
     },
     downloadFile() {
       this.$emit("download-file");
