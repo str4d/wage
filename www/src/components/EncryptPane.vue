@@ -28,7 +28,21 @@
               >Remove selected</b-button
             >
           </div>
-          <div class="column"></div>
+          <div class="column">
+            <b-field class="file">
+              <b-upload
+                v-model="recipientsFiles"
+                multiple
+                expanded
+                @input="validateRecipientsFile"
+              >
+                <a class="button is-fullwidth">
+                  <b-icon icon="upload"></b-icon>
+                  <span>Select recipients file</span>
+                </a>
+              </b-upload>
+            </b-field>
+          </div>
         </div>
         <b-table
           :data="recipients"
@@ -60,6 +74,8 @@ export default {
       recipient: "",
       recipientFieldError: "",
       recipientStrings: [],
+      recipientsFiles: [],
+      recipientsFilesParsed: [],
       columns: [
         {
           field: "label",
@@ -75,9 +91,15 @@ export default {
       return this.recipientFieldError.length ? "is-danger" : "";
     },
     recipients() {
-      return this.recipientStrings.map((r, index) => {
-        return { type: "string", index: index, label: r };
-      });
+      return this.recipientsFiles
+        .map((f, index) => {
+          return { type: "file", index: index, label: f.name };
+        })
+        .concat(
+          this.recipientStrings.map((r, index) => {
+            return { type: "string", index: index, label: r };
+          })
+        );
     },
     // Button disabling
     addDisabled() {
@@ -94,7 +116,31 @@ export default {
     },
   },
   methods: {
+    // Status messages.
+    showError(e) {
+      console.error(e);
+      this.$buefy.toast.open({
+        duration: 5000,
+        message: e,
+        position: "is-bottom",
+        type: "is-danger",
+      });
+    },
     // Input validation
+    validateRecipientsFile() {
+      if (this.recipientsFiles.length) {
+        this.wasm.Recipients.from_file(
+          this.recipientsFiles[this.recipientsFiles.length - 1]
+        )
+          .then((r) => {
+            this.recipientsFilesParsed.push(r);
+          })
+          .catch((e) => {
+            this.recipientsFiles.pop();
+            this.showError(e);
+          });
+      }
+    },
     validateRecipientString() {
       if (this.recipient.length) {
         try {
@@ -113,10 +159,21 @@ export default {
       this.recipient = "";
     },
     removeSelected() {
+      let files = this.checkedRows
+        .filter((row) => row.type === "file")
+        .map((row) => row.index);
       let strings = this.checkedRows
         .filter((row) => row.type === "string")
         .map((row) => row.index);
 
+      this.recipientsFiles = this.recipientsFiles.filter((_, index) => {
+        return !files.includes(index);
+      });
+      this.recipientsFilesParsed = this.recipientsFilesParsed.filter(
+        (_, index) => {
+          return !files.includes(index);
+        }
+      );
       this.recipientStrings = this.recipientStrings.filter((_, index) => {
         return !strings.includes(index);
       });
@@ -126,7 +183,7 @@ export default {
     // Encrypt the file!
     encryptFile() {
       if (this.activeTab === 0) {
-        const recipients = this.recipientStrings.reduce((acc, r) => {
+        const stringRecipients = this.recipientStrings.reduce((acc, r) => {
           if (acc === null) {
             return this.wasm.Recipients.from_recipient(r);
           } else {
@@ -134,7 +191,15 @@ export default {
           }
         }, null);
 
-        this.$emit("encrypt-to-recipients", recipients);
+        const allRecipients = this.recipientsFilesParsed.reduce((acc, r) => {
+          if (acc === null) {
+            return r;
+          } else {
+            return acc.merge(r);
+          }
+        }, stringRecipients);
+
+        this.$emit("encrypt-to-recipients", allRecipients);
       } else if (this.activeTab === 1) {
         this.$emit("encrypt-with-passphrase", this.passphrase);
       }
