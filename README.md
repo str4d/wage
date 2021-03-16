@@ -6,7 +6,7 @@ powered by [rage](https://github.com/str4d/rage).
 Currently an **experimental** alpha, with incomplete functionality:
 
 - [x] Read a JavaScript File as a Rust stream.
-- [ ] Recipient encryption.
+- [x] Recipient encryption.
 - [ ] Recipient decryption.
 - [x] Passphrase encryption.
 - [x] Passphrase decryption.
