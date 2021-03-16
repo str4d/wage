@@ -1,7 +1,7 @@
 <template>
   <section class="columns">
     <div class="column is-narrow">
-      <font-awesome-icon :icon="fileIcon" size="10x" />
+      <font-awesome-icon :icon="fileIcon" :size="iconSize" />
     </div>
     <div id="file-info" class="column">
       <button id="reset-app" class="delete is-large" @click="resetApp()" />
@@ -13,7 +13,7 @@
 <script>
 export default {
   name: "FileInfo",
-  props: ["fileIcon"],
+  props: ["fileIcon", "iconSize"],
   methods: {
     resetApp() {
       this.$emit("reset-app");

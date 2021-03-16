@@ -15,7 +15,11 @@
         v-on:file-removed="removeFileToEncrypt"
       />
       <div class="column is-half" v-if="encrypting || decrypting">
-        <FileInfo v-bind:fileIcon="fileIcon" v-on:reset-app="reset">
+        <FileInfo
+          v-bind:fileIcon="fileIcon"
+          v-bind:iconSize="fileIconSize"
+          v-on:reset-app="reset"
+        >
           <div v-if="encrypting">TODO: Encryption info.</div>
           <div v-if="decrypting">
             <dl>
@@ -29,6 +33,8 @@
         <EncryptPane
           id="details-pane"
           v-if="encrypting"
+          v-bind:wasm="wasm"
+          v-on:encrypt-to-recipients="encryptToRecipients"
           v-on:encrypt-with-passphrase="encryptWithPassphrase"
         />
         <DecryptPane
@@ -119,6 +125,13 @@ export default {
         return "file";
       }
     },
+    fileIconSize() {
+      if (this.encrypting) {
+        return "4x";
+      } else {
+        return "10x";
+      }
+    },
     // Do we need a passphrase from the user?
     needPassphrase() {
       return (
@@ -189,6 +202,17 @@ export default {
         const fileName = this.dropFiles[0].name + ".age";
         callback(window.streamSaver.createWriteStream(fileName));
       }
+    },
+    encryptToRecipients(recipients) {
+      this.prepareEncryptStream((outputStream) => {
+        recipients
+          .into_encryptor()
+          .wrap_output(outputStream)
+          .then((sink) => {
+            this.downloadStream = sink;
+            this.encryptSingleFile();
+          });
+      });
     },
     encryptWithPassphrase(passphrase) {
       this.prepareEncryptStream((outputStream) => {

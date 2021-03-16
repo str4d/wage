@@ -1,3 +1,4 @@
+mod recipient;
 mod shim;
 mod utils;
 
@@ -16,6 +17,82 @@ use wasm_streams::{readable::ReadableStream, writable::WritableStream};
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 const CHUNK_SIZE: usize = 65536;
+
+/// A set of recipients to which an age file can be encrypted.
+#[wasm_bindgen]
+pub struct Recipients(Vec<recipient::Source>);
+
+#[wasm_bindgen]
+impl Recipients {
+    /// Creates a new set containing the given recipient file.
+    ///
+    /// Returns an error if the file is not a recipients file.
+    pub async fn from_file(file: web_sys::File) -> Result<Recipients, JsValue> {
+        // This is an entrance from JS to our WASM APIs; perform one-time setup steps.
+        utils::set_panic_hook();
+        utils::select_language();
+
+        Recipients(vec![]).add_file(file).await
+    }
+
+    /// Creates a new set containing the given recipient.
+    ///
+    /// Returns an error if the string is not a valid recipient.
+    pub fn from_recipient(recipient: &str) -> Result<Recipients, JsValue> {
+        // This is an entrance from JS to our WASM APIs; perform one-time setup steps.
+        utils::set_panic_hook();
+        utils::select_language();
+
+        recipient::from_string(recipient).map(|r| Recipients(vec![r]))
+    }
+
+    /// Adds the given recipients file to this set of recipients.
+    ///
+    /// Returns an error if the file is not a recipients file.
+    pub async fn add_file(mut self, file: web_sys::File) -> Result<Recipients, JsValue> {
+        self.0.push(recipient::read_recipients_list(file).await?);
+        Ok(self)
+    }
+
+    /// Adds the given recipient to this set of recipients.
+    ///
+    /// Returns an error if the string is not a valid recipient.
+    pub fn add_recipient(mut self, recipient: &str) -> Result<Recipients, JsValue> {
+        self.0.push(recipient::from_string(recipient)?);
+        Ok(self)
+    }
+
+    /// Merge two sets of recipients. De-duplication is not performed.
+    pub fn merge(mut self, other: Recipients) -> Recipients {
+        self.0.extend(other.0);
+        self
+    }
+
+    /// Returns an `Encryptor` that will create an age file encrypted to the list of
+    /// recipients.
+    pub fn into_encryptor(self) -> Encryptor {
+        let mut recipients: Vec<_> = self
+            .0
+            .into_iter()
+            .map(|s| match s {
+                recipient::Source::File { recipients } => recipients,
+                recipient::Source::String(k) => vec![k],
+            })
+            .flatten()
+            .collect();
+        recipients.sort_unstable();
+        recipients.dedup();
+
+        Encryptor(age::Encryptor::with_recipients(
+            recipients
+                .into_iter()
+                .map(|k| match k {
+                    recipient::Kind::Native(r) => Box::new(r) as Box<dyn age::Recipient>,
+                })
+                .collect(),
+        ))
+    }
+}
 
 /// A newtype around an [`age::Encryptor`].
 #[wasm_bindgen]
