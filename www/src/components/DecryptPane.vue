@@ -7,7 +7,12 @@
     <b-field label="Passphrase" v-if="!fileDecrypted && needPassphrase">
       <b-input type="password" v-model="passphrase" password-reveal> </b-input>
     </b-field>
-    <b-button v-if="!fileDecrypted" @click="decryptFile">Decrypt</b-button>
+    <b-button
+      v-if="!fileDecrypted"
+      v-bind:disabled="decryptDisabled"
+      @click="decryptFile"
+      >Decrypt</b-button
+    >
     <b-button v-if="fileDecrypted" @click="downloadFile">Download</b-button>
   </section>
 </template>
@@ -24,6 +29,15 @@ export default {
     return {
       passphrase: null,
     };
+  },
+  computed: {
+    // Button disabling
+    decryptDisabled() {
+      return !(
+        (this.needIdentities && false) ||
+        (this.needPassphrase && this.passphrase.length)
+      );
+    },
   },
   methods: {
     decryptFile() {
