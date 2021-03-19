@@ -40,9 +40,11 @@
         <DecryptPane
           id="details-pane"
           v-if="decrypting"
+          v-bind:wasm="wasm"
           v-bind:fileDecrypted="fileDecrypted"
           v-bind:needIdentities="needIdentities"
           v-bind:needPassphrase="needPassphrase"
+          v-on:decrypt-with-identities="decryptWithIdentities"
           v-on:decrypt-with-passphrase="decryptWithPassphrase"
           v-on:download-file="downloadDecryptedFile"
         />
@@ -259,6 +261,24 @@ export default {
       this.wasm.Decryptor.new(file).then((decryptor) => {
         this.decryptor = decryptor;
       });
+    },
+    decryptWithIdentities(identities) {
+      let decryptor = this.decryptor;
+      this.decryptor = null;
+
+      // TODO:
+      // - Handle if decryptor === null
+      // - Disable Decrypt button while decrypting, re-enable on error
+
+      decryptor.decrypt_with_identities(identities).then(
+        (stream) => {
+          this.decryptedStream = stream;
+        },
+        (e) => {
+          this.reset();
+          this.showError(e);
+        }
+      );
     },
     decryptWithPassphrase(passphrase) {
       let decryptor = this.decryptor;

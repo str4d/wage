@@ -1,3 +1,4 @@
+mod identity;
 mod recipient;
 mod shim;
 mod utils;
@@ -17,6 +18,38 @@ use wasm_streams::{readable::ReadableStream, writable::WritableStream};
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 const CHUNK_SIZE: usize = 65536;
+
+/// A set of identities with which an age file can be decrypted.
+#[wasm_bindgen]
+pub struct Identities(Vec<Box<dyn age::Identity>>);
+
+#[wasm_bindgen]
+impl Identities {
+    /// Creates a new set containing the given identities file.
+    ///
+    /// Returns an error if the file is not an identities file.
+    pub async fn from_file(file: web_sys::File) -> Result<Identities, JsValue> {
+        // This is an entrance from JS to our WASM APIs; perform one-time setup steps.
+        utils::set_panic_hook();
+        utils::select_language();
+
+        Identities(vec![]).add_file(file).await
+    }
+
+    /// Adds the given identities file to this set of identities.
+    ///
+    /// Returns an error if the file is not a identities file.
+    pub async fn add_file(mut self, file: web_sys::File) -> Result<Identities, JsValue> {
+        self.0.extend(identity::read_identities_list(file).await?);
+        Ok(self)
+    }
+
+    /// Merge two sets of identities.
+    pub fn merge(mut self, other: Identities) -> Identities {
+        self.0.extend(other.0);
+        self
+    }
+}
 
 /// A set of recipients to which an age file can be encrypted.
 #[wasm_bindgen]
@@ -187,6 +220,23 @@ impl Decryptor {
             age::Decryptor::Recipients(_) => DecryptorType::Recipients,
             age::Decryptor::Passphrase(_) => DecryptorType::Passphrase,
         }
+    }
+
+    /// Consumes the decryptor and returns the decrypted stream.
+    pub async fn decrypt_with_identities(
+        self,
+        identities: Identities,
+    ) -> Result<wasm_streams::readable::sys::ReadableStream, JsValue> {
+        let decryptor = match self.0 {
+            age::Decryptor::Recipients(d) => d,
+            age::Decryptor::Passphrase(_) => panic!("Shouldn't be called"),
+        };
+
+        let reader = decryptor
+            .decrypt_async(identities.0.into_iter())
+            .map_err(|e| JsValue::from(format!("{}", e)))?;
+
+        Ok(ReadableStream::from_stream(shim::ReadStreamer::new(reader, CHUNK_SIZE)).into_raw())
     }
 
     /// Consumes the decryptor and returns the decrypted stream.

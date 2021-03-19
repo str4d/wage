@@ -7,7 +7,7 @@ Currently an **experimental** alpha, with incomplete functionality:
 
 - [x] Read a JavaScript File as a Rust stream.
 - [x] Recipient encryption.
-- [ ] Recipient decryption.
+- [x] Recipient decryption.
 - [x] Passphrase encryption.
 - [x] Passphrase decryption.
 - [ ] Multi-file archive-and-encrypt.
