@@ -1,13 +1,17 @@
 <template>
   <section>
     <b-field>
-      <b-upload v-model="dropFiles" multiple drag-drop @input=filesChanged>
+      <b-upload v-model="dropFiles" multiple drag-drop @input="filesChanged">
         <section class="section">
           <div class="content has-text-centered">
             <p>
               <b-icon icon="upload" size="is-large"> </b-icon>
             </p>
-            <p>Drop files to encrypt or decrypt here, or click to upload</p>
+            <p>
+              Drop files to encrypt
+              <span v-if="!encrypting">or decrypt</span> here, or click to
+              select.
+            </p>
           </div>
         </section>
       </b-upload>
@@ -33,7 +37,7 @@
 <script>
 export default {
   name: "DropZone",
-  props: ["dropFiles"],
+  props: ["dropFiles", "encrypting"],
   methods: {
     filesChanged() {
       this.$emit("files-changed");

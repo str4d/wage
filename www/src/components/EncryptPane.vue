@@ -25,7 +25,12 @@
               expanded
               v-bind:disabled="removeDisabled"
               @click="removeSelected"
-              >Remove selected</b-button
+              >Remove</b-button
+            >
+          </div>
+          <div class="column">
+            <b-button icon-left="key" expanded @click="newIdentity"
+              >New identity</b-button
             >
           </div>
           <div class="column">
@@ -38,7 +43,7 @@
               >
                 <a class="button is-fullwidth">
                   <b-icon icon="upload"></b-icon>
-                  <span>Select recipients file</span>
+                  <span>Select file</span>
                 </a>
               </b-upload>
             </b-field>
@@ -65,6 +70,8 @@
 </template>
 
 <script>
+import { saveAs } from "file-saver";
+
 export default {
   name: "EncryptPane",
   props: ["wasm"],
@@ -116,6 +123,7 @@ export default {
     },
   },
   methods: {
+    saveAs,
     // Status messages.
     showError(e) {
       console.error(e);
@@ -157,6 +165,15 @@ export default {
     addRecipient() {
       this.recipientStrings.push(this.recipient);
       this.recipient = "";
+    },
+    newIdentity() {
+      let identity = this.wasm.X25519Identity.generate();
+
+      let identityBlob = identity.write();
+      this.saveAs(identityBlob, "identity.txt");
+
+      let recipient = identity.recipient();
+      this.recipientStrings.push(recipient);
     },
     removeSelected() {
       let files = this.checkedRows
