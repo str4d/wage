@@ -53,9 +53,13 @@
     </div>
     <footer class="footer">
       <p>
-        This is an
-        <strong>EXPERIMENTAL</strong> alpha version; <strong>DO NOT</strong> use
-        it for real files yet.
+        This is a
+        <strong>BETA</strong> version; make sure you have backups of the files
+        you are using!
+      </p>
+      <p>
+        All operations happen locally inside your browser. No data is uploaded
+        to any server.
       </p>
       <p>
         <a href="https://str4d.xyz/wage">Source available here!</a> Powered by
