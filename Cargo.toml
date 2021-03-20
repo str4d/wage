@@ -11,11 +11,10 @@ crate-type = ["cdylib", "rlib"]
 default = ["console_error_panic_hook"]
 
 [dependencies]
-age = { version = "0.5.1", features = ["armor", "async"] }
 chrono = { version = "0.4", features = ["wasmbind"] }
 futures = "0.3"
 getrandom = { version = "0.1", features = ["wasm-bindgen"] }
-i18n-embed = { version = "0.10.2", features = ["fluent-system", "web-sys-requester"] }
+i18n-embed = { version = "0.12", features = ["fluent-system", "web-sys-requester"] }
 js-sys = "0.3"
 pin-project = "1"
 secrecy = "0.7"
@@ -38,6 +37,11 @@ wee_alloc = { version = "0.4.2", optional = true }
 
 # Temporary workaround for https://github.com/Amanieu/parking_lot/issues/269
 parking_lot_core = "=0.8.0"
+
+[dependencies.age]
+git = "https://github.com/str4d/rage.git"
+rev = "a9b5e88aa5816b284ebea23fc84d0203a3c4fdbb"
+features = ["armor", "async", "web-sys"]
 
 [dependencies.web-sys]
 version = "0.3"
