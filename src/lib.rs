@@ -4,12 +4,13 @@ mod shim;
 mod utils;
 
 use futures::{AsyncRead, TryStreamExt};
-use js_sys::Uint8Array;
-use secrecy::SecretString;
+use js_sys::{Array, Uint8Array};
+use secrecy::{ExposeSecret, SecretString};
 use std::io;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_streams::{readable::ReadableStream, writable::WritableStream};
+use web_sys::{Blob, BlobPropertyBag};
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -18,6 +19,49 @@ use wasm_streams::{readable::ReadableStream, writable::WritableStream};
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 const CHUNK_SIZE: usize = 65536;
+
+/// The standard age identity.
+#[wasm_bindgen]
+pub struct X25519Identity {
+    identity: age::x25519::Identity,
+    created: chrono::DateTime<chrono::Local>,
+}
+
+#[wasm_bindgen]
+impl X25519Identity {
+    /// Generates a new age identity.
+    pub fn generate() -> Self {
+        // This is an entrance from JS to our WASM APIs; perform one-time setup steps.
+        utils::set_panic_hook();
+        utils::select_language();
+
+        X25519Identity {
+            identity: age::x25519::Identity::generate(),
+            created: chrono::Local::now(),
+        }
+    }
+
+    /// Writes this identity to a blob that can be saved as a file.
+    pub fn write(&self) -> Result<Blob, JsValue> {
+        let output = format!(
+            "# created: {}\n# recipient: {}\n{}",
+            self.created
+                .to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
+            self.identity.to_public(),
+            self.identity.to_string().expose_secret()
+        );
+
+        Blob::new_with_u8_array_sequence_and_options(
+            &Array::of1(&JsValue::from_str(&output)).into(),
+            &BlobPropertyBag::new().type_("text/plain;charset=utf-8"),
+        )
+    }
+
+    /// Returns the recipient corresponding to this identity.
+    pub fn recipient(&self) -> String {
+        self.identity.to_public().to_string()
+    }
+}
 
 /// A set of identities with which an age file can be decrypted.
 #[wasm_bindgen]

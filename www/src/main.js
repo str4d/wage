@@ -25,6 +25,7 @@ import {
   faFilePowerpoint,
   faFileVideo,
   faFileWord,
+  faKey,
   faTrash,
   faUpload,
 } from "@fortawesome/free-solid-svg-icons";
@@ -44,6 +45,7 @@ library.add(faFilePdf);
 library.add(faFilePowerpoint);
 library.add(faFileVideo);
 library.add(faFileWord);
+library.add(faKey);
 library.add(faTrash);
 library.add(faUpload);
 

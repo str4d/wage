@@ -28,7 +28,11 @@
               >Remove</b-button
             >
           </div>
-          <div class="column"></div>
+          <div class="column">
+            <b-button icon-left="key" expanded @click="newIdentity"
+              >New identity</b-button
+            >
+          </div>
           <div class="column">
             <b-field class="file">
               <b-upload
@@ -66,6 +70,8 @@
 </template>
 
 <script>
+import { saveAs } from "file-saver";
+
 export default {
   name: "EncryptPane",
   props: ["wasm"],
@@ -117,6 +123,7 @@ export default {
     },
   },
   methods: {
+    saveAs,
     // Status messages.
     showError(e) {
       console.error(e);
@@ -158,6 +165,15 @@ export default {
     addRecipient() {
       this.recipientStrings.push(this.recipient);
       this.recipient = "";
+    },
+    newIdentity() {
+      let identity = this.wasm.X25519Identity.generate();
+
+      let identityBlob = identity.write();
+      this.saveAs(identityBlob, "identity.txt");
+
+      let recipient = identity.recipient();
+      this.recipientStrings.push(recipient);
     },
     removeSelected() {
       let files = this.checkedRows
