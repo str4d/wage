@@ -267,6 +267,8 @@ impl Decryptor {
     }
 
     /// Consumes the decryptor and returns the decrypted stream.
+    ///
+    /// Panics if `self.requires() == DecryptorType::Passphrase`.
     pub async fn decrypt_with_identities(
         self,
         identities: Identities,
@@ -284,6 +286,8 @@ impl Decryptor {
     }
 
     /// Consumes the decryptor and returns the decrypted stream.
+    ///
+    /// Panics if `self.requires() == DecryptorType::Recipients`.
     pub async fn decrypt_with_passphrase(
         self,
         passphrase: String,
