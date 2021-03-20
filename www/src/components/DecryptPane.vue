@@ -63,7 +63,7 @@ export default {
         },
       ],
       checkedRows: [],
-      passphrase: null,
+      passphrase: "",
     };
   },
   computed: {
