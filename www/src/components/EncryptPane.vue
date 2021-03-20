@@ -25,9 +25,10 @@
               expanded
               v-bind:disabled="removeDisabled"
               @click="removeSelected"
-              >Remove selected</b-button
+              >Remove</b-button
             >
           </div>
+          <div class="column"></div>
           <div class="column">
             <b-field class="file">
               <b-upload
@@ -38,7 +39,7 @@
               >
                 <a class="button is-fullwidth">
                   <b-icon icon="upload"></b-icon>
-                  <span>Select recipients file</span>
+                  <span>Select file</span>
                 </a>
               </b-upload>
             </b-field>
