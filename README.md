@@ -3,15 +3,12 @@
 A WASM package and web app for encrypting and decrypting age-encrypted files,
 powered by [rage](https://github.com/str4d/rage).
 
-Currently an **experimental** alpha, with incomplete functionality:
+Currently in beta. The WASM library and webapp are mostly complete, but their
+APIs and UX are still expected to change as improvements are made. Known missing
+features:
 
-- [x] Read a JavaScript File as a Rust stream.
-- [x] Recipient encryption.
-- [x] Recipient decryption.
-- [x] Passphrase encryption.
-- [x] Passphrase decryption.
 - [ ] Multi-file archive-and-encrypt.
-- [x] Expose a Rust stream to JavaScript as a user-downloadable file.
+- [ ] Optional armoring for encryption.
 
 ## Development
 
@@ -37,6 +34,10 @@ wasm-pack build
 cd www
 npm run serve
 ```
+
+File downloading for encrypted or decrypted files will likely not work unless
+you are either accessing the webapp via localhost, or have configured it with a
+TLS certificate.
 
 ## License
 
