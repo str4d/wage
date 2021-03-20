@@ -11,6 +11,7 @@
         class="column"
         v-if="!decrypting"
         v-bind:dropFiles="dropFiles"
+        v-bind:encrypting="encrypting"
         v-on:files-changed="handleFiles"
         v-on:file-removed="removeFileToEncrypt"
       />
