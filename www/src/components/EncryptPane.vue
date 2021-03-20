@@ -125,6 +125,15 @@ export default {
   methods: {
     saveAs,
     // Status messages.
+    showWarning(e) {
+      console.warn(e);
+      this.$buefy.toast.open({
+        duration: 5000,
+        message: e,
+        position: "is-bottom",
+        type: "is-warning",
+      });
+    },
     showError(e) {
       console.error(e);
       this.$buefy.toast.open({
@@ -174,6 +183,8 @@ export default {
 
       let recipient = identity.recipient();
       this.recipientStrings.push(recipient);
+
+      this.showWarning("Make sure to back up identity.txt, you will need it to decrypt!");
     },
     removeSelected() {
       let files = this.checkedRows
