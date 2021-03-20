@@ -279,7 +279,7 @@ impl Decryptor {
         };
 
         let reader = decryptor
-            .decrypt_async(identities.0.into_iter())
+            .decrypt_async(identities.0.iter().map(|i| &**i))
             .map_err(|e| JsValue::from(format!("{}", e)))?;
 
         Ok(ReadableStream::from_stream(shim::ReadStreamer::new(reader, CHUNK_SIZE)).into_raw())
