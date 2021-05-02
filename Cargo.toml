@@ -39,8 +39,7 @@ wee_alloc = { version = "0.4.2", optional = true }
 parking_lot_core = "=0.8.0"
 
 [dependencies.age]
-git = "https://github.com/str4d/rage.git"
-rev = "a9b5e88aa5816b284ebea23fc84d0203a3c4fdbb"
+version = "0.6"
 features = ["armor", "async", "web-sys"]
 
 [dependencies.web-sys]
