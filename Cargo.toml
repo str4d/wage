@@ -13,7 +13,7 @@ default = ["console_error_panic_hook"]
 [dependencies]
 chrono = { version = "0.4", features = ["wasmbind"] }
 futures = "0.3"
-getrandom = { version = "0.1", features = ["wasm-bindgen"] }
+getrandom = { version = "0.2", features = ["js"] }
 i18n-embed = { version = "0.12", features = ["fluent-system", "web-sys-requester"] }
 js-sys = "0.3"
 pin-project = "1"
@@ -39,8 +39,7 @@ wee_alloc = { version = "0.4.2", optional = true }
 parking_lot_core = "=0.8.0"
 
 [dependencies.age]
-git = "https://github.com/str4d/rage.git"
-rev = "a9b5e88aa5816b284ebea23fc84d0203a3c4fdbb"
+version = "0.6"
 features = ["armor", "async", "web-sys"]
 
 [dependencies.web-sys]
