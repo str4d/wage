@@ -4,9 +4,8 @@ mod shim;
 mod utils;
 
 use age::secrecy::{ExposeSecret, SecretString};
-use futures::{AsyncRead, TryStreamExt};
-use js_sys::{Array, Uint8Array};
-use std::io;
+use futures::AsyncRead;
+use js_sys::Array;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_streams::{readable::ReadableStream, writable::WritableStream};
@@ -237,14 +236,9 @@ impl Decryptor {
         // to throw, while `.unchecked_into()` works fine. I do not understand why :(
         let stream = ReadableStream::from_raw(file.stream().unchecked_into());
 
-        let reader: Box<dyn AsyncRead + Unpin> =
-            Box::new(age::armor::ArmoredReader::from_async_reader(
-                stream
-                    .into_stream()
-                    .map_ok(|chunk| Uint8Array::from(chunk).to_vec())
-                    .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("JS error: {:?}", e)))
-                    .into_async_read(),
-            ));
+        let reader: Box<dyn AsyncRead + Unpin> = Box::new(
+            age::armor::ArmoredReader::from_async_reader(stream.into_async_read()),
+        );
 
         let inner = age::Decryptor::new_async(reader)
             .await
@@ -282,7 +276,7 @@ impl Decryptor {
             .decrypt_async(identities.0.iter().map(|i| &**i))
             .map_err(|e| JsValue::from(format!("{}", e)))?;
 
-        Ok(ReadableStream::from_stream(shim::ReadStreamer::new(reader, CHUNK_SIZE)).into_raw())
+        Ok(ReadableStream::from_async_read(reader, CHUNK_SIZE).into_raw())
     }
 
     /// Consumes the decryptor and returns the decrypted stream.
@@ -301,6 +295,6 @@ impl Decryptor {
             .decrypt_async(&SecretString::new(passphrase), None)
             .map_err(|e| JsValue::from(format!("{}", e)))?;
 
-        Ok(ReadableStream::from_stream(shim::ReadStreamer::new(reader, CHUNK_SIZE)).into_raw())
+        Ok(ReadableStream::from_async_read(reader, CHUNK_SIZE).into_raw())
     }
 }
