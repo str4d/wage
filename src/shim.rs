@@ -1,3 +1,4 @@
+use age::secrecy::{ExposeSecret, SecretVec};
 use futures::{
     io::{AsyncRead, AsyncWrite},
     ready,
@@ -7,7 +8,6 @@ use futures::{
 };
 use js_sys::Uint8Array;
 use pin_project::pin_project;
-use secrecy::{ExposeSecret, SecretVec};
 use std::io;
 use std::pin::Pin;
 use wasm_bindgen::prelude::*;

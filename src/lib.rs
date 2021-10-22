@@ -3,9 +3,9 @@ mod recipient;
 mod shim;
 mod utils;
 
+use age::secrecy::{ExposeSecret, SecretString};
 use futures::{AsyncRead, TryStreamExt};
 use js_sys::{Array, Uint8Array};
-use secrecy::{ExposeSecret, SecretString};
 use std::io;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
