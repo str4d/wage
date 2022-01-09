@@ -13,6 +13,9 @@ default = ["console_error_panic_hook"]
 [dependencies]
 chrono = { version = "0.4", features = ["wasmbind"] }
 futures = "0.3"
+# We need to have a dependency on every version of getrandom in our tree, to set
+# their corresponding feature flags to enable WASM support.
+getrandom_1 = { package = "getrandom", version = "0.1", features = ["wasm-bindgen"] }
 getrandom = { version = "0.2", features = ["js"] }
 i18n-embed = { version = "0.13", features = ["fluent-system", "web-sys-requester"] }
 js-sys = "0.3"
