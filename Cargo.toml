@@ -38,7 +38,7 @@ console_error_panic_hook = { version = "0.1.1", optional = true }
 wee_alloc = { version = "0.4.2", optional = true }
 
 [dependencies.age]
-version = "0.8.1"
+version = "0.9"
 features = ["armor", "async", "web-sys"]
 
 [dependencies.web-sys]
