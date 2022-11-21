@@ -201,11 +201,11 @@ impl Encryptor {
     ) -> Result<wasm_streams::writable::sys::WritableStream, JsValue> {
         // Convert from the opaque web_sys::WritableStream Rust type to the fully-functional
         // wasm_streams::writable::WritableStream.
-        let sink = WritableStream::from_raw(output).into_sink();
+        let stream = WritableStream::from_raw(output);
 
         let writer = self
             .0
-            .wrap_async_output(shim::SinkWriter::new(sink, CHUNK_SIZE))
+            .wrap_async_output(stream.into_async_write())
             .await
             .map_err(|e| JsValue::from(format!("{}", e)))?;
 
