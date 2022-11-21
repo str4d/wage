@@ -145,8 +145,8 @@ impl Recipients {
     }
 
     /// Returns an `Encryptor` that will create an age file encrypted to the list of
-    /// recipients.
-    pub fn into_encryptor(self) -> Encryptor {
+    /// recipients, or `None` if this set of recipients is empty.
+    pub fn into_encryptor(self) -> Option<Encryptor> {
         let mut recipients: Vec<_> = self
             .0
             .into_iter()
@@ -159,14 +159,15 @@ impl Recipients {
         recipients.sort_unstable();
         recipients.dedup();
 
-        Encryptor(age::Encryptor::with_recipients(
+        age::Encryptor::with_recipients(
             recipients
                 .into_iter()
                 .map(|k| match k {
-                    recipient::Kind::Native(r) => Box::new(r) as Box<dyn age::Recipient>,
+                    recipient::Kind::Native(r) => Box::new(r) as Box<dyn age::Recipient + Send>,
                 })
                 .collect(),
-        ))
+        )
+        .map(Encryptor)
     }
 }
 

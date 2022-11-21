@@ -22,7 +22,7 @@ js-sys = "0.3"
 pin-project = "1"
 wasm-bindgen = "0.2.63"
 wasm-bindgen-futures = "0.4"
-wasm-streams = "0.2"
+wasm-streams = "0.3"
 
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires
@@ -38,7 +38,7 @@ console_error_panic_hook = { version = "0.1.1", optional = true }
 wee_alloc = { version = "0.4.2", optional = true }
 
 [dependencies.age]
-version = "0.8.1"
+version = "0.9"
 features = ["armor", "async", "web-sys"]
 
 [dependencies.web-sys]
