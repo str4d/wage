@@ -7,74 +7,8 @@ use futures::{
 };
 use js_sys::Uint8Array;
 use pin_project::pin_project;
-use std::io;
 use std::pin::Pin;
 use wasm_bindgen::prelude::*;
-
-#[pin_project(project = SinkWriterProj)]
-pub(crate) struct SinkWriter<S: Sink<JsValue, Error = JsValue> + Unpin> {
-    #[pin]
-    sink: S,
-    default_chunk_size: usize,
-    chunk: Vec<u8>,
-}
-
-impl<S: Sink<JsValue, Error = JsValue> + Unpin> SinkWriter<S> {
-    pub(crate) fn new(sink: S, default_chunk_size: usize) -> Self {
-        SinkWriter {
-            sink,
-            default_chunk_size,
-            chunk: Vec::with_capacity(default_chunk_size),
-        }
-    }
-
-    fn poll_sink_chunk(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-        let SinkWriterProj {
-            mut sink, chunk, ..
-        } = self.project();
-
-        if !chunk.is_empty() {
-            ready!(sink.as_mut().poll_ready(cx))
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("JS error: {:?}", e)))?;
-            sink.as_mut()
-                .start_send(Uint8Array::from(&chunk[..]).into())
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("JS error: {:?}", e)))?;
-            chunk.clear();
-        }
-
-        Poll::Ready(Ok(()))
-    }
-}
-
-impl<S: Sink<JsValue, Error = JsValue> + Unpin> AsyncWrite for SinkWriter<S> {
-    fn poll_write(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-        buf: &[u8],
-    ) -> Poll<io::Result<usize>> {
-        if self.chunk.len() >= self.default_chunk_size {
-            ready!(self.as_mut().poll_sink_chunk(cx))?;
-        }
-        self.chunk.extend_from_slice(buf);
-        Poll::Ready(Ok(buf.len()))
-    }
-
-    fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-        ready!(self.as_mut().poll_sink_chunk(cx))?;
-        self.project()
-            .sink
-            .poll_flush(cx)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("JS error: {:?}", e)))
-    }
-
-    fn poll_close(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-        ready!(self.as_mut().poll_sink_chunk(cx))?;
-        self.project()
-            .sink
-            .poll_close(cx)
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("JS error: {:?}", e)))
-    }
-}
 
 struct Chunk {
     bytes: SecretVec<u8>,
